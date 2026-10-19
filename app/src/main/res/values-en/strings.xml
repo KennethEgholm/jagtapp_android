@@ -224,6 +224,12 @@
     <string name="delete">Delete</string>
     <string name="entry_deleted">The entry has been deleted.</string>
     <string name="add_to_journal">Add to journal</string>
+    <string name="all_species_tab">All species</string>
+    <string name="all_species_info">General seasons in Denmark. Local seasons may differ. See them under Huntable.</string>
+    <string name="all_species_search">Search species</string>
+    <string name="no_general_season">No general season.</string>
+    <string name="no_results">No results for “%1$s”</string>
+    <string name="clear_search">Clear the search</string>
 
     <plurals name="pieces">
         <item quantity="one">%d animal</item>

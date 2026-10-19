@@ -35,6 +35,10 @@ Ikke en fane. **Anskudt**-knappen står i toppen af Jagtbart ved siden af Indsti
 
 Anden fane i bundnavigationen (`NavigationBar`): Jagtbart, så Journal. Dato og sted har egen kopi her (`BagDraft`) — de ændrer ikke Jagtbart. Swipe til venstre på en artsrække i Jagtbart noterer ét stykke og skifter til Journal; rækken springer tilbage (`SwipeToDismissBox` med `confirmValueChange` der returnerer falsk — handlingen er en notering, ikke en sletning). Bekræftelsen står nederst: “[Art] noteret”, Fortryd, +1, Se året. Årets liste grupperer på måned, og swipe sletter for alvor dér. Artslisten kan tilføjes fra et ark med søgning. Ingen iCloud: journalen er kun en lokal fil med rullende backup (`vildtudbytte.json`, `artsliste.json`) — Android-delen deler ikke data.
 
+## Alle arter
+
+Tredje fane. Generelle jagttider for alle arter, grupperet i kort der starter sammenfoldet ("Sammenfold grupper" gælder også her). Søgning folder grupperne med træf ud uden ekstra tryk. Arterne er slået op ved Danmark, så ingen lokal tid lækker ind. Ingen dato, intet sted, ingen åben/lukket. Rækkerne har samme journal-swipe som Jagtbart. Detaljesiden viser den generelle kontekst: ingen status, tynd SeasonBar uden markør og artnoten i stedet for stedens note.
+
 ## Endnu ikke bygget
 
-Alle arter, Indstillinger-fanen, Om, onboarding.
+Indstillinger-fanen, Om, onboarding.

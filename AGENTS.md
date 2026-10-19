@@ -69,15 +69,15 @@ Built:
 4. **Sammenfold grupper** — a sheet from Indstillinger in the top bar, until the settings tab exists. Default on.
 5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar. Same content will be pushed from Om, once Om exists. No handler phone list, no Anskudt button on rows.
 6. **Journal** — the second tab, so the bottom bar exists now. Its own date and place draft. Year rows, species list, search and edit, like iOS v1. Swipe left on a species row in Jagtbart records it and switches tabs; the row snaps back. Species detail has **Tilføj til journal**. Local file only, no cloud.
+7. **Alle arter** — third tab. General seasons for every species, grouped cards that start collapsed (Sammenfold grupper applies; search unfolds groups with hits). No date, no place, no open/closed. Rows have the same bag swipe as Jagtbart. Detail page shows the general context: no status, thin SeasonBar without marker, species note.
 
 Not built yet. Do not invent them. The iOS app is the spec:
 
-7. Alle arter (no bag swipe there until it exists)
 8. Indstillinger as a tab
 9. Om
 10. Velkomst
 
-Bottom bar: Jagtbart and Journal. More items come with the screens above.
+Bottom bar: Jagtbart, Journal, Alle arter. More items come with the screens above.
 
 ## Rules
 

@@ -47,10 +47,11 @@ fun SpeciesDetailScreen(
     item: ResolvedSpecies,
     groupTitle: String?,
     calendar: SeasonCalendar,
-    date: LocalDate,
-    placeName: String,
-    localPlaceName: String?,
-    status: SeasonStatus,
+    fromQuery: Boolean,
+    date: LocalDate? = null,
+    placeName: String? = null,
+    localPlaceName: String? = null,
+    status: SeasonStatus? = null,
     sourceUrl: String?,
     photos: SpeciesPhotos?,
     biology: BiologyCatalog?,
@@ -58,6 +59,10 @@ fun SpeciesDetailScreen(
     onBack: () -> Unit,
 ) {
     val season = LocalSeasonColors.current
+    // Jagtbart shows status for the chosen date and place. Alle arter shows
+    // the general times only: no date, no place, no status. Like SpeciesContext.
+    val periods = if (fromQuery) item.periods else item.generalPeriods
+    val note = if (fromQuery) item.note else item.species.note
     Scaffold(
         topBar = {
             LargeTopAppBar(
@@ -92,45 +97,47 @@ fun SpeciesDetailScreen(
                     )
                 }
             }
-            item {
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            if (status.isOpen) stringResource(R.string.huntable) else stringResource(R.string.not_huntable),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (status.isOpen) season.open else MaterialTheme.colorScheme.onSurface,
+            if (fromQuery && status != null && date != null) {
+                item {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                if (status.isOpen) stringResource(R.string.huntable) else stringResource(R.string.not_huntable),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (status.isOpen) season.open else MaterialTheme.colorScheme.onSurface,
+                            )
+                        },
+                        supportingContent = {
+                            Text("${calendar.longDate(date).capitalized(calendar.locale)} · $placeName")
+                        },
+                        leadingContent = {
+                            Icon(
+                                Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = if (status.isOpen) season.open else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                    val end = status.endDate
+                    val next = status.nextOpening
+                    when {
+                        status.isOpen && end != null && status.daysLeft != null -> Fact(
+                            stringResource(R.string.last_day),
+                            calendar.longDate(end).capitalized(calendar.locale),
+                            relative(status.daysLeft),
                         )
-                    },
-                    supportingContent = {
-                        Text("${calendar.longDate(date).capitalized(calendar.locale)} · $placeName")
-                    },
-                    leadingContent = {
-                        Icon(
-                            Icons.Outlined.CheckCircle,
-                            contentDescription = null,
-                            tint = if (status.isOpen) season.open else MaterialTheme.colorScheme.onSurfaceVariant,
+                        next != null && status.daysUntilOpening != null -> Fact(
+                            stringResource(R.string.opens),
+                            calendar.longDate(next).capitalized(calendar.locale),
+                            relative(status.daysUntilOpening),
                         )
-                    },
-                )
-                val end = status.endDate
-                val next = status.nextOpening
-                when {
-                    status.isOpen && end != null && status.daysLeft != null -> Fact(
-                        stringResource(R.string.last_day),
-                        calendar.longDate(end).capitalized(calendar.locale),
-                        relative(status.daysLeft),
-                    )
-                    next != null && status.daysUntilOpening != null -> Fact(
-                        stringResource(R.string.opens),
-                        calendar.longDate(next).capitalized(calendar.locale),
-                        relative(status.daysUntilOpening),
-                    )
-                    else -> Text(
-                        stringResource(R.string.no_season_year),
-                        Modifier.padding(horizontal = Spacing.l),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                        else -> Text(
+                            stringResource(R.string.no_season_year),
+                            Modifier.padding(horizontal = Spacing.l),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
             if (onRecordInJournal != null) {
@@ -147,19 +154,23 @@ fun SpeciesDetailScreen(
             }
             item {
                 Text(
-                    stringResource(R.string.season_in, placeName),
+                    if (fromQuery) stringResource(R.string.season_in, placeName.orEmpty()) else stringResource(R.string.general_season),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
                 SeasonBar(
-                    periods = item.periods,
-                    marker = calendar.monthDay(date),
+                    periods = periods,
+                    marker = if (fromQuery) date?.let { calendar.monthDay(it) } else null,
                     modifier = Modifier.padding(horizontal = Spacing.l),
                 )
-                if (item.periods.isEmpty()) {
-                    Text(stringResource(R.string.no_season_here), Modifier.padding(Spacing.l), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (periods.isEmpty()) {
+                    Text(
+                        stringResource(if (fromQuery) R.string.no_season_here else R.string.no_general_season),
+                        Modifier.padding(Spacing.l),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 } else {
-                    item.periods.forEach { period ->
+                    periods.forEach { period ->
                         ListItem(
                             headlineContent = { Text("${calendar.full(period.from)} – ${calendar.full(period.to)}") },
                             leadingContent = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = season.open) },
@@ -173,7 +184,7 @@ fun SpeciesDetailScreen(
                     modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.xs),
                 )
             }
-            if (item.isLocal) {
+            if (fromQuery && item.isLocal) {
                 item {
                     Text(stringResource(R.string.local_season), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
                     if (localPlaceName != null) Fact(stringResource(R.string.applies_to), localPlaceName, null)
@@ -181,7 +192,6 @@ fun SpeciesDetailScreen(
                     Text(stringResource(R.string.here_footer), Modifier.padding(Spacing.l), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            val note = item.note
             if (!note.isNullOrBlank()) {
                 item {
                     Text(stringResource(R.string.note), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))

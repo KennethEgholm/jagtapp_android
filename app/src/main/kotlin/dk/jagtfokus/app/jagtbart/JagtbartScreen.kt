@@ -207,6 +207,7 @@ fun JagtbartScreen(
                 item = item,
                 groupTitle = group?.let { dk.jagtfokus.app.ui.groupTitle(it.id, it.title) },
                 calendar = calendar,
+                fromQuery = true,
                 date = vm.queryDate,
                 placeName = vm.queryPlace.name,
                 localPlaceName = item.localPlaceId?.let { vm.catalog.place(it)?.name },
@@ -389,44 +390,6 @@ private fun Headline() {
         style = MaterialTheme.typography.headlineSmall,
         modifier = Modifier.padding(horizontal = Spacing.xs),
     )
-}
-
-/**
- * Swipe left on a species row records it in the journal and switches to the
- * Journal tab, like the trailing swipe action on iOS. The row snaps back:
- * the action is a note, not a deletion.
- */
-@Composable
-private fun BagSwipe(onSwipeRecord: () -> Unit, content: @Composable () -> Unit) {
-    val label = stringResource(R.string.journal_tab)
-    val state = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) onSwipeRecord()
-            false
-        },
-    )
-    SwipeToDismissBox(
-        state = state,
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(LocalSeasonColors.current.open.copy(alpha = 0.12f))
-                    .padding(horizontal = Spacing.l),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.AddCircle, contentDescription = null, tint = LocalSeasonColors.current.open)
-                    Text(label, color = LocalSeasonColors.current.open, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        },
-    ) {
-        Box(Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
-            content()
-        }
-    }
 }
 
 @Composable
@@ -822,18 +785,6 @@ private sealed interface JagtRoute {
     data object Weather : JagtRoute
     data class Species(val id: String) : JagtRoute
 }
-
-private class GroupFolding(context: android.content.Context) {
-    private val prefs = context.getSharedPreferences("jagtapp", android.content.Context.MODE_PRIVATE)
-    var collapse by androidx.compose.runtime.mutableStateOf(prefs.getBoolean("sammenfoldGrupper", true))
-        private set
-
-    fun set(value: Boolean) {
-        collapse = value
-        prefs.edit().putBoolean("sammenfoldGrupper", value).apply()
-    }
-}
-
 private fun queryCoordinate(vm: JagtbartViewModel): Pair<Double, Double>? {
     val latitude = vm.gpsLatitude
     val longitude = vm.gpsLongitude

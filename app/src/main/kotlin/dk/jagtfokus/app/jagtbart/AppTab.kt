@@ -1,7 +1,8 @@
 package dk.jagtfokus.app.jagtbart
 
-/** The two bottom tabs. Jagtbart first, then the journal. */
+/** The bottom tabs. Jagtbart, Journal, then Alle arter — like iOS' tab order. */
 enum class AppTab {
     Jagtbart,
     Journal,
+    AllSpecies,
 }

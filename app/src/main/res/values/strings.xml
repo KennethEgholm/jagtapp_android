@@ -224,6 +224,12 @@
     <string name="delete">Slet</string>
     <string name="entry_deleted">Posten er slettet.</string>
     <string name="add_to_journal">Tilføj til journal</string>
+    <string name="all_species_tab">Alle arter</string>
+    <string name="all_species_info">Generelle jagttider i Danmark. Lokale tider kan afvige. Se dem under Jagtbart.</string>
+    <string name="all_species_search">Søg art</string>
+    <string name="no_general_season">Ingen generel jagttid.</string>
+    <string name="no_results">Ingen resultater for “%1$s”</string>
+    <string name="clear_search">Ryd søgningen</string>
 
     <plurals name="pieces">
         <item quantity="one">%d stykke</item>

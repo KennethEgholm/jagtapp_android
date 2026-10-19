@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -485,6 +486,17 @@ private fun SpeciesListAddSheet(vm: JagtbartViewModel, bag: BagStore, onDismiss:
                 modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.m, vertical = Spacing.xs),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.journal_search_prompt)) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(
+                                Icons.Filled.Cancel,
+                                contentDescription = stringResource(R.string.clear_search),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
             )
             LazyColumn {
                 vm.catalog.groups.forEach { group ->
@@ -559,6 +571,17 @@ fun BagSearchScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalend
                     modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.m, vertical = Spacing.xs),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.journal_search_prompt)) },
+                    trailingIcon = {
+                        if (query.isNotEmpty()) {
+                            IconButton(onClick = { query = "" }) {
+                                Icon(
+                                    Icons.Filled.Cancel,
+                                    contentDescription = stringResource(R.string.clear_search),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    },
                 )
             }
             items(species, key = { it.id }) { item ->

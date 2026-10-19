@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.Icon
@@ -27,6 +28,7 @@ import dk.jagtfokus.app.data.loadBiology
 import dk.jagtfokus.app.data.loadCatalog
 import dk.jagtfokus.app.data.loadSpeciesPhotos
 import dk.jagtfokus.app.location.AndroidLocationSource
+import dk.jagtfokus.app.jagtbart.AllSpeciesScreen
 import dk.jagtfokus.app.jagtbart.AppTab
 import dk.jagtfokus.app.jagtbart.BagStore
 import dk.jagtfokus.app.jagtbart.JagtbartScreen
@@ -88,6 +90,7 @@ class MainActivity : ComponentActivity() {
                             when (tab.value) {
                                 AppTab.Jagtbart -> JagtbartScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal }, initialSheet = sheet)
                                 AppTab.Journal -> JournalScreen(vm, bag, calendar = remember { dk.jagtfokus.core.SeasonCalendar() })
+                                AppTab.AllSpecies -> AllSpeciesScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal })
                             }
                         }
                         NavigationBar {
@@ -102,6 +105,12 @@ class MainActivity : ComponentActivity() {
                                 onClick = { tab.value = AppTab.Journal },
                                 icon = { Icon(Icons.Outlined.MenuBook, contentDescription = null) },
                                 label = { Text(stringResource(R.string.journal_tab)) },
+                            )
+                            NavigationBarItem(
+                                selected = tab.value == AppTab.AllSpecies,
+                                onClick = { tab.value = AppTab.AllSpecies },
+                                icon = { Icon(Icons.Outlined.FormatListBulleted, contentDescription = null) },
+                                label = { Text(stringResource(R.string.all_species_tab)) },
                             )
                         }
                     }
