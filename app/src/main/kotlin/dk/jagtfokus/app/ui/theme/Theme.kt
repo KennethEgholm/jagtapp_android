@@ -19,6 +19,11 @@ val Sun = Color(0xFFFF9F0A)
 
 /** Udseende in Indstillinger. Stored in the "udseende" preference. */
 enum class Appearance { SYSTEM, LIGHT, DARK }
+
+/** The welcome screen's dark green brand world. Same hues as iOS. */
+val BrandDeep = Color(0xFF0B2619)
+val BrandGlow = Color(0xFF214C33)
+val BrandGold = Color(0xFFD9B65E)
 val Brass = Color(0xFF7A5C17)
 val BrassDark = Color(0xFFD9B65E)
 val Amber = Color(0xFFA35200)
@@ -30,6 +35,7 @@ object Spacing {
     val s = 12.dp
     val m = 16.dp
     val l = 24.dp
+    val xl = 32.dp
 }
 
 object Radius {

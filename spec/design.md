@@ -43,6 +43,10 @@ Tredje fane. Generelle jagttider for alle arter, grupperet i kort der starter sa
 
 Fjerde fane (tandhjul). Øverst **Udseende** som en `SingleChoiceSegmentedButtonRow` (System/Lys/Mørk med ikoner) — valget ligger i "udseende"-præferencen og styrer `JagtFokusTheme`, så hele appen skifter med det samme. Så **Lister** med "Sammenfold grupper". Derefter Om-sektionerne i samme liste, som iOS: Data (kilde, opdateret, bekendtgørelsen), Ansvar, Schweiss-registret (skubbet ind som skærm, ikke ark), Fotos, Privatliv og Denne app med Version (fra PackageManager) og Dataversion (fra kataloget).
 
+## Velkomst
+
+Første start. Mørkegrøn brandverden (`BrandDeep` med glow fra øverst højre), mærket, tre punkter i guld (dato og sted, lokale jagttider, privat og offline), fraskrivelsen i en boks med guldkant og knappen **Forstået** i guld. Den forklarer positionsbrugen, før systemets dialog kommer. Gemt i "velkomst"-præferencen; slettes data, kommer den igen.
+
 ## Endnu ikke bygget
 
-Velkomst.
+Intet. iOS-appens faner og velkomst findes alle i Android-delen.

@@ -70,10 +70,9 @@ Built:
 5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar; pushed from Indstillinger's Om section. No handler phone list, no Anskudt button on rows.
 6. **Journal** — the second tab, so the bottom bar exists now. Its own date and place draft. Year rows, species list, search and edit, like iOS v1. Swipe left on a species row in Jagtbart records it and switches tabs; the row snaps back. Species detail has **Tilføj til journal**. Local file only, no cloud.
 7. **Alle arter** — third tab. General seasons for every species, grouped cards that start collapsed (Sammenfold grupper applies; search unfolds groups with hits). No date, no place, no open/closed. Rows have the same bag swipe as Jagtbart. Detail page shows the general context: no status, thin SeasonBar without marker, species note.
+8. **Velkomst** — first start only, before everything. Dark green brand world with the mark, three points (date and place, local seasons, private and offline), the disclaimer in a gold box, and **Forstået**. Explains the location use before the system dialog. Stored in the "velkomst" preference.
 
-Not built yet. Do not invent them. The iOS app is the spec:
-
-8. Velkomst
+Not built yet: nothing left from the iOS spec.
 
 Bottom bar: Jagtbart, Journal, Alle arter, Indstillinger.
 

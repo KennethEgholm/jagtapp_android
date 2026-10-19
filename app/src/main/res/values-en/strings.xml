@@ -259,6 +259,18 @@
     <string name="data_version_value">v%1$d</string>
     <string name="wounded_and_hit">Wounded and vehicle-hit deer.</string>
 
+    <string name="welcome_title">Welcome to JagtFokus</string>
+    <string name="welcome_subtitle">See what you can hunt today, where you are.</string>
+    <string name="welcome_feature_date_title">Date and place</string>
+    <string name="welcome_feature_date">The list follows today\'s date and your location. You can pick another day and another place.</string>
+    <string name="welcome_feature_local_title">Local seasons</string>
+    <string name="welcome_feature_local">Islands and areas with their own seasons beat the general ones.</string>
+    <string name="welcome_feature_privacy_title">Private and offline</string>
+    <string name="welcome_feature_privacy">No account. No tracking. Your location stays on your phone.</string>
+    <string name="welcome_important">Important</string>
+    <string name="welcome_accept">Understood</string>
+    <string name="welcome_after">JagtFokus then asks for your location.</string>
+
     <plurals name="pieces">
         <item quantity="one">%d animal</item>
         <item quantity="other">%d animals</item>

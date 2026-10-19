@@ -259,6 +259,18 @@
     <string name="data_version_value">v%1$d</string>
     <string name="wounded_and_hit">Anskudt og påkørt hjortevildt.</string>
 
+    <string name="welcome_title">Velkommen til JagtFokus</string>
+    <string name="welcome_subtitle">Se hvad der er jagtbart i dag, der hvor du er.</string>
+    <string name="welcome_feature_date_title">Dato og sted</string>
+    <string name="welcome_feature_date">Listen følger dagens dato og din position. Du kan vælge en anden dag og et andet sted.</string>
+    <string name="welcome_feature_local_title">Lokale jagttider</string>
+    <string name="welcome_feature_local">Øer og områder med egne tider slår de generelle.</string>
+    <string name="welcome_feature_privacy_title">Privat og offline</string>
+    <string name="welcome_feature_privacy">Ingen konto. Ingen tracking. Din position bliver på telefonen.</string>
+    <string name="welcome_important">Vigtigt</string>
+    <string name="welcome_accept">Forstået</string>
+    <string name="welcome_after">Derefter spørger JagtFokus om din position.</string>
+
     <plurals name="pieces">
         <item quantity="one">%d stykke</item>
         <item quantity="other">%d stykker</item>

@@ -35,6 +35,7 @@ import dk.jagtfokus.app.location.AndroidLocationSource
 import dk.jagtfokus.app.jagtbart.AllSpeciesScreen
 import dk.jagtfokus.app.jagtbart.AppTab
 import dk.jagtfokus.app.jagtbart.SettingsScreen
+import dk.jagtfokus.app.jagtbart.WelcomeScreen
 import dk.jagtfokus.app.jagtbart.BagStore
 import dk.jagtfokus.app.jagtbart.JagtbartScreen
 import dk.jagtfokus.app.jagtbart.JagtbartViewModel
@@ -67,6 +68,20 @@ class MainActivity : ComponentActivity() {
         val sheet = if (debuggable) intent.getStringExtra("sheet") else null
         setContent {
             val prefs = getSharedPreferences("jagtapp", android.content.Context.MODE_PRIVATE)
+            var welcomed by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(prefs.getBoolean("velkomst", false))
+            }
+            if (!welcomed) {
+                JagtFokusTheme(darkTheme = true) {
+                    Box(Modifier.fillMaxSize()) {
+                        WelcomeScreen(onAccept = {
+                            prefs.edit().putBoolean("velkomst", true).apply()
+                            welcomed = true
+                        })
+                    }
+                }
+                return@setContent
+            }
             var appearance by androidx.compose.runtime.remember {
                 androidx.compose.runtime.mutableStateOf(
                     runCatching { Appearance.valueOf(prefs.getString("udseende", "SYSTEM") ?: "SYSTEM") }.getOrDefault(Appearance.SYSTEM),
