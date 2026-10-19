@@ -146,6 +146,13 @@ class SeasonCalendar(
         return "$month ${date.year}"
     }
 
+    /** Hunting year containing the date. 1 April starts the year named by that calendar year. */
+    fun huntingYear(on: LocalDate): Int = huntingYearOf(on)
+
+    /** "2026/27" */
+    fun huntingYearLabel(startYear: Int): String =
+        "%d/%02d".format(startYear, (startYear + 1) % 100)
+
     private val isDanish: Boolean get() = locale.language == "da"
 
     private fun shortMonth(month: Int): String {

@@ -42,6 +42,7 @@ core/src/main/kotlin/dk/jagtfokus/core/
   HuntingCatalog.kt                # Models and JSON
   SpeciesBiology.kt                # Biology catalog. Display only
   SpeciesPhotos.kt                 # Photo credits. Display only
+  BagJournal.kt                    # The bag. Pure logic + codec, JVM tests
   SeasonQuery.kt                   # Places, overrides, matchPlace
   SeasonCalendar.kt                # Status and Copenhagen dates
   SeasonLists.kt                   # Open groups, closed species, search
@@ -52,7 +53,8 @@ app/src/main/kotlin/dk/jagtfokus/app/
   data/CatalogLoader.kt
   location/LocationSource.kt
   ui/theme/Theme.kt                # Tokens. No hex in screens
-  jagtbart/                        # The only screen
+  jagtbart/                        # The two screens
+  data/BagFileStore.kt             # Bag files with backup and corrupt preservation
 app/src/main/res/values/           # Danish source strings
 app/src/main/res/values-en/        # English
 ```
@@ -63,19 +65,19 @@ Built:
 
 1. **Jagtbart** — heading “Jagtbart vildt efter tid og sted”. Date and place, then the sun card, then the answer card, then open groups, then “Ikke jagtbar her”. Default: today + here. Pull to refresh updates location and, when newer, the catalog.
 2. **Sol og vejr** — pushed from the sun card. Display only. MET Norway. Sun and moon are calculated on the phone.
-3. **Artsdetalje** — pushed from Jagtbart, so it shows status. Photo and biology like iOS; no journal button yet.
+3. **Artsdetalje** — pushed from Jagtbart, so it shows status. Photo, biology and a **Tilføj til journal** row like iOS.
 4. **Sammenfold grupper** — a sheet from Indstillinger in the top bar, until the settings tab exists. Default on.
 5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar. Same content will be pushed from Om, once Om exists. No handler phone list, no Anskudt button on rows.
+6. **Journal** — the second tab, so the bottom bar exists now. Its own date and place draft. Year rows, species list, search and edit, like iOS v1. Swipe left on a species row in Jagtbart records it and switches tabs; the row snaps back. Species detail has **Tilføj til journal**. Local file only, no cloud.
 
 Not built yet. Do not invent them. The iOS app is the spec:
 
-6. Alle arter
-7. Indstillinger as a tab
-8. Journal
+7. Alle arter (no bag swipe there until it exists)
+8. Indstillinger as a tab
 9. Om
 10. Velkomst
 
-No bottom bar until there is a second destination.
+Bottom bar: Jagtbart and Journal. More items come with the screens above.
 
 ## Rules
 

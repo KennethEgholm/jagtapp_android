@@ -186,6 +186,54 @@
     <string name="schweiss_mail_hint">Emails the Schweiss secretariat</string>
     <string name="schweiss_secretariat_footer">Weekday contact. Not an emergency line.</string>
 
+    <string name="journal_tab">Journal</string>
+    <string name="journal_heading">Hunting journal</string>
+    <string name="bag_title">Bag</string>
+    <string name="bag_year_row">Game taken</string>
+    <string name="bag_year_hint">Show this year\'s entries</string>
+    <string name="species_list_hint">Show the species you have taken</string>
+    <string name="no_entries">No entries</string>
+    <string name="no_entries_footer">No entries.</string>
+    <string name="no_species">No species</string>
+    <string name="hunting_year_of">Hunting year %1$s</string>
+    <string name="species_list_title">Species list</string>
+    <string name="species_list_add">Add</string>
+    <string name="species_list_remove">Remove</string>
+    <string name="species_list_empty">No species.</string>
+    <string name="species_list_footer">Swiping removes the species here. The journal is not changed.</string>
+    <string name="species_list_add_hint">Puts the species on the species list, or takes it off</string>
+    <string name="species_list_done">Done</string>
+    <string name="unknown_group">Unknown</string>
+    <string name="huntable_today">Huntable today</string>
+    <string name="huntable_section">Huntable</string>
+    <string name="nothing_huntable_today">Nothing huntable today.</string>
+    <string name="nothing_huntable">Nothing huntable.</string>
+    <string name="recently_taken">Recently taken</string>
+    <string name="search_all_species">Search all species</string>
+    <string name="journal_search">Search</string>
+    <string name="journal_search_prompt">Species</string>
+    <string name="record_hint">Record %1$s</string>
+    <string name="journal_recorded">%1$s recorded</string>
+    <string name="close_confirmation">Close confirmation</string>
+    <string name="undo">Undo</string>
+    <string name="plus_one">+1</string>
+    <string name="see_year">See the year</string>
+    <string name="journal_edit">Edit</string>
+    <string name="count_label">Count %1$d</string>
+    <string name="no_place">No place</string>
+    <string name="delete">Delete</string>
+    <string name="entry_deleted">The entry has been deleted.</string>
+    <string name="add_to_journal">Add to journal</string>
+
+    <plurals name="pieces">
+        <item quantity="one">%d animal</item>
+        <item quantity="other">%d animals</item>
+    </plurals>
+    <plurals name="species_count">
+        <item quantity="one">%d species</item>
+        <item quantity="other">%d species</item>
+    </plurals>
+
     <plurals name="species_open">
         <item quantity="one">species is huntable</item>
         <item quantity="other">species are huntable</item>

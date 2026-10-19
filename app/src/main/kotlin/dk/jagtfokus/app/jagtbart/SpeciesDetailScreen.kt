@@ -2,11 +2,13 @@ package dk.jagtfokus.app.jagtbart
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Map
@@ -26,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.IconTile
 import dk.jagtfokus.app.ui.SeasonBar
 import dk.jagtfokus.app.ui.theme.LocalSeasonColors
 import dk.jagtfokus.app.ui.theme.Spacing
@@ -51,6 +54,7 @@ fun SpeciesDetailScreen(
     sourceUrl: String?,
     photos: SpeciesPhotos?,
     biology: BiologyCatalog?,
+    onRecordInJournal: (() -> Unit)? = null,
     onBack: () -> Unit,
 ) {
     val season = LocalSeasonColors.current
@@ -126,6 +130,18 @@ fun SpeciesDetailScreen(
                         stringResource(R.string.no_season_year),
                         Modifier.padding(horizontal = Spacing.l),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (onRecordInJournal != null) {
+                item {
+                    val label = stringResource(R.string.add_to_journal)
+                    ListItem(
+                        headlineContent = {
+                            Text(label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                        },
+                        leadingContent = { IconTile(Icons.Outlined.AddCircle) },
+                        modifier = Modifier.clickable { onRecordInJournal?.invoke() },
                     )
                 }
             }

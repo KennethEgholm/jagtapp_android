@@ -186,6 +186,54 @@
     <string name="schweiss_mail_hint">Skriver til Schweiss-sekretariatet</string>
     <string name="schweiss_secretariat_footer">Hverdagskontakt. Ikke en vagttelefon.</string>
 
+    <string name="journal_tab">Journal</string>
+    <string name="journal_heading">Jagtjournal</string>
+    <string name="bag_title">Vildtudbytte</string>
+    <string name="bag_year_row">Nedlagt vildt</string>
+    <string name="bag_year_hint">Vis årets poster</string>
+    <string name="species_list_hint">Vis arter du har nedlagt</string>
+    <string name="no_entries">Ingen poster</string>
+    <string name="no_entries_footer">Ingen poster.</string>
+    <string name="no_species">Ingen arter</string>
+    <string name="hunting_year_of">Jagtåret %1$s</string>
+    <string name="species_list_title">Artsliste</string>
+    <string name="species_list_add">Tilføj</string>
+    <string name="species_list_remove">Fjern</string>
+    <string name="species_list_empty">Ingen arter.</string>
+    <string name="species_list_footer">Swipe fjerner arten her. Journalen ændres ikke.</string>
+    <string name="species_list_add_hint">Sætter arten på artslisten eller tager den af</string>
+    <string name="species_list_done">Færdig</string>
+    <string name="unknown_group">Ukendt</string>
+    <string name="huntable_today">Jagtbart i dag</string>
+    <string name="huntable_section">Jagtbart</string>
+    <string name="nothing_huntable_today">Intet jagtbart i dag.</string>
+    <string name="nothing_huntable">Intet jagtbart.</string>
+    <string name="recently_taken">Senest nedlagt</string>
+    <string name="search_all_species">Søg i alle arter</string>
+    <string name="journal_search">Søg</string>
+    <string name="journal_search_prompt">Art</string>
+    <string name="record_hint">Notér %1$s</string>
+    <string name="journal_recorded">%1$s noteret</string>
+    <string name="close_confirmation">Luk bekræftelse</string>
+    <string name="undo">Fortryd</string>
+    <string name="plus_one">+1</string>
+    <string name="see_year">Se året</string>
+    <string name="journal_edit">Ret</string>
+    <string name="count_label">Antal %1$d</string>
+    <string name="no_place">Intet sted</string>
+    <string name="delete">Slet</string>
+    <string name="entry_deleted">Posten er slettet.</string>
+    <string name="add_to_journal">Tilføj til journal</string>
+
+    <plurals name="pieces">
+        <item quantity="one">%d stykke</item>
+        <item quantity="other">%d stykker</item>
+    </plurals>
+    <plurals name="species_count">
+        <item quantity="one">%d art</item>
+        <item quantity="other">%d arter</item>
+    </plurals>
+
     <plurals name="species_open">
         <item quantity="one">art er jagtbar</item>
         <item quantity="other">arter er jagtbare</item>

@@ -31,6 +31,10 @@ Artsdetaljen fra Jagtbart viser status. Den har foto og biologi som iOS: fotoet 
 
 Ikke en fane. **Anskudt**-knappen står i toppen af Jagtbart ved siden af Indstillinger og åbner et `ModalBottomSheet`. Indholdet (`SchweissContent`) genbruges, når Om bliver bygget og skubber det ind. To veje, begge synlige, ingen omskifter: Anskudt under jagt (link til schweiss.dk og Naturstyrelsen) og påkørt hjortevildt (Ring 1812). Telefonnumre åbner opkalds-appen via `ACTION_DIAL`, mail åbner mail-appen, nettet åbner browseren. Seks dagtimer er tekst med kilde. Ingen timer. Ingen telefonliste, ingen scrape. Appen er ikke loven.
 
+## Journal
+
+Anden fane i bundnavigationen (`NavigationBar`): Jagtbart, så Journal. Dato og sted har egen kopi her (`BagDraft`) — de ændrer ikke Jagtbart. Swipe til venstre på en artsrække i Jagtbart noterer ét stykke og skifter til Journal; rækken springer tilbage (`SwipeToDismissBox` med `confirmValueChange` der returnerer falsk — handlingen er en notering, ikke en sletning). Bekræftelsen står nederst: “[Art] noteret”, Fortryd, +1, Se året. Årets liste grupperer på måned, og swipe sletter for alvor dér. Artslisten kan tilføjes fra et ark med søgning. Ingen iCloud: journalen er kun en lokal fil med rullende backup (`vildtudbytte.json`, `artsliste.json`) — Android-delen deler ikke data.
+
 ## Endnu ikke bygget
 
-Journal, øvrige faner, onboarding. Ingen bundnavigation med én fane.
+Alle arter, Indstillinger-fanen, Om, onboarding.

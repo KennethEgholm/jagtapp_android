@@ -5,19 +5,36 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import dk.jagtfokus.app.data.CatalogRepository
+import dk.jagtfokus.app.data.WeatherClient
 import dk.jagtfokus.app.data.loadBiology
 import dk.jagtfokus.app.data.loadCatalog
 import dk.jagtfokus.app.data.loadSpeciesPhotos
+import dk.jagtfokus.app.location.AndroidLocationSource
+import dk.jagtfokus.app.jagtbart.AppTab
+import dk.jagtfokus.app.jagtbart.BagStore
 import dk.jagtfokus.app.jagtbart.JagtbartScreen
+import dk.jagtfokus.app.jagtbart.JagtbartViewModel
+import dk.jagtfokus.app.jagtbart.JournalScreen
 import dk.jagtfokus.app.ui.theme.JagtFokusTheme
 import dk.jagtfokus.app.ui.theme.Spacing
+import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -37,7 +54,8 @@ class MainActivity : ComponentActivity() {
         }
         val placeId = intent.getStringExtra("place")
         // Same idea as the iOS launch arguments: `-sheet schweiss` opens the sheet. Debug only.
-        val debuggable = applicationContext.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val debuggable = applicationContext.applicationInfo.flags and
+            android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
         val sheet = if (debuggable) intent.getStringExtra("sheet") else null
         setContent {
             JagtFokusTheme {
@@ -49,7 +67,44 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 } else {
-                    JagtbartScreen(catalog, biology, photos, date, placeId, initialSheet = sheet)
+                    val bag = remember { BagStore(applicationContext.filesDir) }
+                    val vm = viewModel {
+                        JagtbartViewModel(
+                            catalog = catalog,
+                            catalogs = CatalogRepository(applicationContext),
+                            weatherClient = WeatherClient(),
+                            location = AndroidLocationSource(applicationContext),
+                            initialDate = date,
+                            initialPlaceId = placeId,
+                        )
+                    }
+                    val tab = remember { androidx.compose.runtime.mutableStateOf(AppTab.Jagtbart) }
+                    // A swipe on a species row records it and switches to the journal.
+                    androidx.compose.runtime.LaunchedEffect(bag.tabRequests) {
+                        if (bag.tabRequests > 0) tab.value = AppTab.Journal
+                    }
+                    Column(Modifier.fillMaxSize()) {
+                        Box(Modifier.weight(1f)) {
+                            when (tab.value) {
+                                AppTab.Jagtbart -> JagtbartScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal }, initialSheet = sheet)
+                                AppTab.Journal -> JournalScreen(vm, bag, calendar = remember { dk.jagtfokus.core.SeasonCalendar() })
+                            }
+                        }
+                        NavigationBar {
+                            NavigationBarItem(
+                                selected = tab.value == AppTab.Jagtbart,
+                                onClick = { tab.value = AppTab.Jagtbart },
+                                icon = { Icon(Icons.Outlined.MyLocation, contentDescription = null) },
+                                label = { Text(stringResource(R.string.tab_jagtbart)) },
+                            )
+                            NavigationBarItem(
+                                selected = tab.value == AppTab.Journal,
+                                onClick = { tab.value = AppTab.Journal },
+                                icon = { Icon(Icons.Outlined.MenuBook, contentDescription = null) },
+                                label = { Text(stringResource(R.string.journal_tab)) },
+                            )
+                        }
+                    }
                 }
             }
         }

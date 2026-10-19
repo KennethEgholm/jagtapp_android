@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -76,9 +77,16 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dk.jagtfokus.app.R
 import dk.jagtfokus.app.location.AndroidLocationSource
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material.icons.outlined.AddCircle
+import dk.jagtfokus.app.ui.IconTile
 import dk.jagtfokus.app.ui.MoonPhaseIcon
+import dk.jagtfokus.app.ui.QueryRow
+import dk.jagtfokus.app.ui.SectionCard
 import dk.jagtfokus.app.ui.SunEventIcon
 import dk.jagtfokus.app.ui.decimal
+import dk.jagtfokus.app.ui.groupTitle
 import dk.jagtfokus.app.ui.percent
 import dk.jagtfokus.app.ui.sunHorizonIcon
 import dk.jagtfokus.app.ui.weatherIcon
@@ -112,26 +120,16 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JagtbartScreen(
-    catalog: HuntingCatalog,
+    vm: JagtbartViewModel,
     biology: BiologyCatalog?,
     photos: SpeciesPhotos?,
-    initialDate: LocalDate?,
-    initialPlaceId: String?,
+    bag: BagStore,
+    onSwitchToJournal: () -> Unit,
     initialSheet: String? = null,
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val calendar = remember(locale) { SeasonCalendar(locale = locale) }
-    val vm = viewModel {
-        JagtbartViewModel(
-            catalog = catalog,
-            catalogs = dk.jagtfokus.app.data.CatalogRepository(context.applicationContext),
-            weatherClient = dk.jagtfokus.app.data.WeatherClient(),
-            location = AndroidLocationSource(context.applicationContext),
-            initialDate = initialDate,
-            initialPlaceId = initialPlaceId,
-        )
-    }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -167,6 +165,10 @@ fun JagtbartScreen(
     val folding = remember { GroupFolding(context.applicationContext) }
     val snackbar = androidx.compose.material3.SnackbarHostState()
     val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val recordSwipe: (String) -> Unit = { id ->
+        bag.recordAndSwitchTab(id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace))
+        onSwitchToJournal()
+    }
     val sections = vm.catalog.resolvedSections(vm.queryPlace)
     val open = calendar.openGroups(sections, vm.queryDate)
     val closed = calendar.closedSpecies(sections, vm.queryDate)
@@ -203,7 +205,7 @@ fun JagtbartScreen(
             val group = vm.catalog.groups.firstOrNull { group -> group.species.any { it.id == id } }
             SpeciesDetailScreen(
                 item = item,
-                groupTitle = group?.let { groupTitle(it.id, it.title) },
+                groupTitle = group?.let { dk.jagtfokus.app.ui.groupTitle(it.id, it.title) },
                 calendar = calendar,
                 date = vm.queryDate,
                 placeName = vm.queryPlace.name,
@@ -212,6 +214,10 @@ fun JagtbartScreen(
                 sourceUrl = vm.catalog.sourceLink,
                 photos = photos,
                 biology = biology,
+                onRecordInJournal = {
+                    bag.recordAndSwitchTab(item.id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace))
+                    onSwitchToJournal()
+                },
                 onBack = { route = JagtRoute.List },
             )
         }
@@ -314,6 +320,8 @@ fun JagtbartScreen(
                         canFold = folding.collapse,
                         closingSoon = soon,
                         date = vm.queryDate,
+                        onSwipeRecord = recordSwipe,
+
                         onToggle = { vm.toggleGroup(group.id) },
                         onSpecies = { route = JagtRoute.Species(it) },
                     )
@@ -326,6 +334,8 @@ fun JagtbartScreen(
                             expanded = vm.showsClosed || open.isEmpty(),
                             canFold = open.isNotEmpty(),
                             date = vm.queryDate,
+                            onSwipeRecord = recordSwipe,
+
                             onToggle = vm::toggleClosed,
                             onSpecies = { route = JagtRoute.Species(it) },
                         )
@@ -357,7 +367,7 @@ fun JagtbartScreen(
     }
     if (showPlace) {
         PlacePickerSheet(
-            catalog = catalog,
+            catalog = vm.catalog,
             followHere = vm.followHere,
             selectedId = vm.pickedPlace.id,
             locationState = vm.locationState,
@@ -381,14 +391,42 @@ private fun Headline() {
     )
 }
 
+/**
+ * Swipe left on a species row records it in the journal and switches to the
+ * Journal tab, like the trailing swipe action on iOS. The row snaps back:
+ * the action is a note, not a deletion.
+ */
 @Composable
-private fun Card(content: @Composable () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Radius.large),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        content = content,
+private fun BagSwipe(onSwipeRecord: () -> Unit, content: @Composable () -> Unit) {
+    val label = stringResource(R.string.journal_tab)
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) onSwipeRecord()
+            false
+        },
     )
+    SwipeToDismissBox(
+        state = state,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(LocalSeasonColors.current.open.copy(alpha = 0.12f))
+                    .padding(horizontal = Spacing.l),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.AddCircle, contentDescription = null, tint = LocalSeasonColors.current.open)
+                    Text(label, color = LocalSeasonColors.current.open, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        },
+    ) {
+        Box(Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) {
+            content()
+        }
+    }
 }
 
 @Composable
@@ -412,7 +450,7 @@ private fun DatePlaceCard(
         else -> null
     }
     val problem = locationProblem(followHere, locationState, gpsPlace, place)
-    Card {
+    SectionCard {
         Column {
             QueryRow(
                 icon = Icons.Outlined.CalendarMonth,
@@ -471,49 +509,6 @@ private fun locationProblem(
             stringResource(R.string.location_unavailable)
         }
         else -> null
-    }
-}
-
-@Composable
-private fun QueryRow(
-    icon: ImageVector,
-    title: String,
-    value: String,
-    detail: String?,
-    hint: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.m, vertical = Spacing.s)
-            .semantics { contentDescription = listOfNotNull(title, value, detail, hint).joinToString(", ") },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-    ) {
-        IconTile(icon)
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-            if (detail != null) {
-                Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-private fun IconTile(icon: ImageVector, color: Color = LocalSeasonColors.current.forest) {
-    Box(
-        Modifier
-            .size(30.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(color),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -586,6 +581,7 @@ private fun GroupCard(
     canFold: Boolean,
     closingSoon: Int,
     date: LocalDate,
+    onSwipeRecord: (String) -> Unit,
     onToggle: () -> Unit,
     onSpecies: (String) -> Unit,
 ) {
@@ -597,7 +593,7 @@ private fun GroupCard(
     } else {
         null
     }
-    Card {
+    SectionCard {
         Column {
             Row(
                 Modifier
@@ -642,7 +638,9 @@ private fun GroupCard(
             }
             if (expanded) {
                 group.species.forEach { item ->
-                    SpeciesRow(item, calendar.status(item.periods, date), calendar) { onSpecies(item.id) }
+                    BagSwipe({ onSwipeRecord(item.id) }) {
+                        SpeciesRow(item, calendar.status(item.periods, date), calendar) { onSpecies(item.id) }
+                    }
                 }
             }
         }
@@ -656,13 +654,14 @@ private fun ClosedCard(
     expanded: Boolean,
     canFold: Boolean,
     date: LocalDate,
+    onSwipeRecord: (String) -> Unit,
     onToggle: () -> Unit,
     onSpecies: (String) -> Unit,
 ) {
     val title = stringResource(R.string.not_open_here)
     val shown = stringResource(R.string.shown)
     val hidden = stringResource(R.string.hidden)
-    Card {
+    SectionCard {
         Column {
             Row(
                 Modifier
@@ -690,7 +689,9 @@ private fun ClosedCard(
             }
             if (expanded) {
                 species.forEach { item ->
-                    SpeciesRow(item, calendar.status(item.periods, date), calendar) { onSpecies(item.id) }
+                    BagSwipe({ onSwipeRecord(item.id) }) {
+                        SpeciesRow(item, calendar.status(item.periods, date), calendar) { onSpecies(item.id) }
+                    }
                 }
                 Text(
                     stringResource(R.string.sorted_by_opening),
@@ -816,18 +817,6 @@ private fun LocalBadge() {
     }
 }
 
-@Composable
-private fun groupTitle(id: String, fromData: String): String = when (id) {
-    "klovbaerende" -> stringResource(R.string.group_klovbaerende)
-    "rovdyr" -> stringResource(R.string.group_rovdyr)
-    "ovrige_pattedyr" -> stringResource(R.string.group_ovrige_pattedyr)
-    "andefugle" -> stringResource(R.string.group_andefugle)
-    "gaes" -> stringResource(R.string.group_gaes)
-    "honsefugle" -> stringResource(R.string.group_honsefugle)
-    "ovrige_fugle" -> stringResource(R.string.group_ovrige_fugle)
-    else -> fromData
-}
-
 private sealed interface JagtRoute {
     data object List : JagtRoute
     data object Weather : JagtRoute
@@ -863,7 +852,7 @@ private fun SunCard(
     onClick: () -> Unit,
 ) {
     val hint = stringResource(R.string.open_sun)
-    Card {
+    SectionCard {
         Row(
             Modifier
                 .fillMaxWidth()
