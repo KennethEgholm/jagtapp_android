@@ -66,18 +66,16 @@ Built:
 1. **Jagtbart** — heading “Jagtbart vildt efter tid og sted”. Date and place, then the sun card, then the answer card, then open groups, then “Ikke jagtbar her”. Default: today + here. Pull to refresh updates location and, when newer, the catalog.
 2. **Sol og vejr** — pushed from the sun card. Display only. MET Norway. Sun and moon are calculated on the phone.
 3. **Artsdetalje** — pushed from Jagtbart, so it shows status. Photo, biology and a **Tilføj til journal** row like iOS.
-4. **Sammenfold grupper** — a sheet from Indstillinger in the top bar, until the settings tab exists. Default on.
-5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar. Same content will be pushed from Om, once Om exists. No handler phone list, no Anskudt button on rows.
+4. **Indstillinger** — fourth tab. Udseende (System/Lys/Mørk, no Material You), then the Om sections in the same list: Data, Ansvar, Schweiss-registret (pushed, same content as the sheet), Fotos, Privatliv, Denne app with Version and Dataversion. "Sammenfold grupper" lives here now (was a sheet until this tab existed).
+5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar; pushed from Indstillinger's Om section. No handler phone list, no Anskudt button on rows.
 6. **Journal** — the second tab, so the bottom bar exists now. Its own date and place draft. Year rows, species list, search and edit, like iOS v1. Swipe left on a species row in Jagtbart records it and switches tabs; the row snaps back. Species detail has **Tilføj til journal**. Local file only, no cloud.
 7. **Alle arter** — third tab. General seasons for every species, grouped cards that start collapsed (Sammenfold grupper applies; search unfolds groups with hits). No date, no place, no open/closed. Rows have the same bag swipe as Jagtbart. Detail page shows the general context: no status, thin SeasonBar without marker, species note.
 
 Not built yet. Do not invent them. The iOS app is the spec:
 
-8. Indstillinger as a tab
-9. Om
-10. Velkomst
+8. Velkomst
 
-Bottom bar: Jagtbart, Journal, Alle arter. More items come with the screens above.
+Bottom bar: Jagtbart, Journal, Alle arter, Indstillinger.
 
 ## Rules
 

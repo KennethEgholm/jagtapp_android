@@ -84,6 +84,7 @@ import dk.jagtfokus.app.ui.IconTile
 import dk.jagtfokus.app.ui.MoonPhaseIcon
 import dk.jagtfokus.app.ui.QueryRow
 import dk.jagtfokus.app.ui.SectionCard
+import dk.jagtfokus.app.ui.capitalizedFirst
 import dk.jagtfokus.app.ui.SunEventIcon
 import dk.jagtfokus.app.ui.decimal
 import dk.jagtfokus.app.ui.groupTitle
@@ -154,7 +155,6 @@ fun JagtbartScreen(
 
     var showDate by remember { mutableStateOf(false) }
     var showPlace by remember { mutableStateOf(false) }
-    var showSettings by remember { mutableStateOf(false) }
     var showSchweiss by remember { mutableStateOf(false) }
 
     // Debug launch arguments, same idea as iOS: `-sheet schweiss` opens the sheet.
@@ -239,9 +239,6 @@ fun JagtbartScreen(
                 actions = {
                     androidx.compose.material3.TextButton(onClick = { showSchweiss = true }) {
                         Text(stringResource(R.string.schweiss_toolbar))
-                    }
-                    androidx.compose.material3.TextButton(onClick = { showSettings = true }) {
-                        Text(stringResource(R.string.settings))
                     }
                 },
             )
@@ -344,10 +341,6 @@ fun JagtbartScreen(
                 }
             }
         }
-    }
-
-    if (showSettings) {
-        SettingsSheet(folding.collapse, onChange = folding::set, onDismiss = { showSettings = false })
     }
 
     if (showSchweiss) {
@@ -914,22 +907,3 @@ private fun SunEvent(date: java.time.Instant?, rising: Boolean, calendar: Season
         )
     }
 }
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-private fun SettingsSheet(collapse: Boolean, onChange: (Boolean) -> Unit, onDismiss: () -> Unit) {
-    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss) {
-        Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(Spacing.l))
-        androidx.compose.material3.ListItem(
-            headlineContent = { Text(stringResource(R.string.collapse_groups)) },
-            supportingContent = { Text(stringResource(R.string.collapse_groups_footer)) },
-            trailingContent = {
-                androidx.compose.material3.Switch(checked = collapse, onCheckedChange = onChange)
-            },
-        )
-        Spacer(Modifier.size(Spacing.l))
-    }
-}
-
-private fun String.capitalizedFirst(locale: Locale): String =
-    replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }

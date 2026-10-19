@@ -16,6 +16,9 @@ val Forest = Color(0xFF2F6B47)
 val ForestDark = Color(0xFF7FC79A)
 /** Sunrise and sunset, on the sun card and the weather page. Display only, not status. */
 val Sun = Color(0xFFFF9F0A)
+
+/** Udseende in Indstillinger. Stored in the "udseende" preference. */
+enum class Appearance { SYSTEM, LIGHT, DARK }
 val Brass = Color(0xFF7A5C17)
 val BrassDark = Color(0xFFD9B65E)
 val Amber = Color(0xFFA35200)
@@ -73,8 +76,11 @@ private val DarkScheme = darkColorScheme(
 )
 
 @Composable
-fun JagtFokusTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+fun JagtFokusTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
+    val dark = darkTheme
     val season = if (dark) {
         SeasonColors(open = ForestDark, closingSoon = AmberDark, local = BrassDark, forest = Forest)
     } else {

@@ -35,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -473,7 +474,8 @@ fun SpeciesListScreen(vm: JagtbartViewModel, bag: BagStore, onBack: () -> Unit) 
 @Composable
 private fun SpeciesListAddSheet(vm: JagtbartViewModel, bag: BagStore, onDismiss: () -> Unit) {
     var query by remember { mutableStateOf("") }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.fillMaxHeight(0.92f)) {
             Text(
                 stringResource(R.string.species_list_add),

@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -21,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dk.jagtfokus.app.data.CatalogRepository
 import dk.jagtfokus.app.data.WeatherClient
@@ -30,10 +34,12 @@ import dk.jagtfokus.app.data.loadSpeciesPhotos
 import dk.jagtfokus.app.location.AndroidLocationSource
 import dk.jagtfokus.app.jagtbart.AllSpeciesScreen
 import dk.jagtfokus.app.jagtbart.AppTab
+import dk.jagtfokus.app.jagtbart.SettingsScreen
 import dk.jagtfokus.app.jagtbart.BagStore
 import dk.jagtfokus.app.jagtbart.JagtbartScreen
 import dk.jagtfokus.app.jagtbart.JagtbartViewModel
 import dk.jagtfokus.app.jagtbart.JournalScreen
+import dk.jagtfokus.app.ui.theme.Appearance
 import dk.jagtfokus.app.ui.theme.JagtFokusTheme
 import dk.jagtfokus.app.ui.theme.Spacing
 import java.io.File
@@ -60,7 +66,18 @@ class MainActivity : ComponentActivity() {
             android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
         val sheet = if (debuggable) intent.getStringExtra("sheet") else null
         setContent {
-            JagtFokusTheme {
+            val prefs = getSharedPreferences("jagtapp", android.content.Context.MODE_PRIVATE)
+            var appearance by androidx.compose.runtime.remember {
+                androidx.compose.runtime.mutableStateOf(
+                    runCatching { Appearance.valueOf(prefs.getString("udseende", "SYSTEM") ?: "SYSTEM") }.getOrDefault(Appearance.SYSTEM),
+                )
+            }
+            val darkTheme = when (appearance) {
+                Appearance.SYSTEM -> isSystemInDarkTheme()
+                Appearance.LIGHT -> false
+                Appearance.DARK -> true
+            }
+            JagtFokusTheme(darkTheme = darkTheme) {
                 if (catalog == null) {
                     Box(Modifier.fillMaxSize().padding(Spacing.l), contentAlignment = Alignment.Center) {
                         Text(
@@ -80,6 +97,7 @@ class MainActivity : ComponentActivity() {
                             initialPlaceId = placeId,
                         )
                     }
+                    val calendar = remember { dk.jagtfokus.core.SeasonCalendar() }
                     val tab = remember { androidx.compose.runtime.mutableStateOf(AppTab.Jagtbart) }
                     // A swipe on a species row records it and switches to the journal.
                     androidx.compose.runtime.LaunchedEffect(bag.tabRequests) {
@@ -89,8 +107,12 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.weight(1f)) {
                             when (tab.value) {
                                 AppTab.Jagtbart -> JagtbartScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal }, initialSheet = sheet)
-                                AppTab.Journal -> JournalScreen(vm, bag, calendar = remember { dk.jagtfokus.core.SeasonCalendar() })
+                                AppTab.Journal -> JournalScreen(vm, bag, calendar)
                                 AppTab.AllSpecies -> AllSpeciesScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal })
+                                AppTab.Settings -> SettingsScreen(vm, calendar, appearance) { option ->
+                                    appearance = option
+                                    prefs.edit().putString("udseende", option.name).apply()
+                                }
                             }
                         }
                         NavigationBar {
@@ -111,6 +133,12 @@ class MainActivity : ComponentActivity() {
                                 onClick = { tab.value = AppTab.AllSpecies },
                                 icon = { Icon(Icons.Outlined.FormatListBulleted, contentDescription = null) },
                                 label = { Text(stringResource(R.string.all_species_tab)) },
+                            )
+                            NavigationBarItem(
+                                selected = tab.value == AppTab.Settings,
+                                onClick = { tab.value = AppTab.Settings },
+                                icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                                label = { Text(stringResource(R.string.settings_tab)) },
                             )
                         }
                     }

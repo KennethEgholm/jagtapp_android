@@ -23,7 +23,7 @@ Solkortet følger iOS' SunRow: orange flise med sol over horisont, klokkeslæt i
 
 Ikon-nærvær, fordi Material-sættet mangler SF-symboler: solopgang/solnedgang og sol-over-horisont er tegnet på Canvas (`SunEventIcon`, `sunHorizonIcon`), og månefasernes otte glyffer er tegnet på Canvas (`MoonPhaseIcon`). MET's symboltabel er kortlagt til Material-ikoner i `ui/WeatherIcon.kt`. Vindpilen peger derhen, hvor vinden blæser: vind fra øst peger mod vest.
 
-**Sammenfold grupper** ligger i et ark fra Indstillinger i toppen, indtil Indstillinger-fanen findes. Standard til. “Ikke jagtbar her” foldes stadig.
+**Sammenfold grupper** står i Indstillinger-fanen. Standard til. “Ikke jagtbar her” foldes stadig.
 
 Artsdetaljen fra Jagtbart viser status. Den har foto og biologi som iOS: fotoet står under overskriften i 3:2 med kreditlinje, biologi (latinsk navn, “I Danmark”, “Yngel” og kildelinks) under noten, før jagtkilden. Billedet ligger i `app/src/main/assets/photos/` som `photo-<id>.jpg`, så et manglende billede bare udelader kortet. Den har ikke journalknap endnu.
 
@@ -39,6 +39,10 @@ Anden fane i bundnavigationen (`NavigationBar`): Jagtbart, så Journal. Dato og 
 
 Tredje fane. Generelle jagttider for alle arter, grupperet i kort der starter sammenfoldet ("Sammenfold grupper" gælder også her). Søgning folder grupperne med træf ud uden ekstra tryk. Arterne er slået op ved Danmark, så ingen lokal tid lækker ind. Ingen dato, intet sted, ingen åben/lukket. Rækkerne har samme journal-swipe som Jagtbart. Detaljesiden viser den generelle kontekst: ingen status, tynd SeasonBar uden markør og artnoten i stedet for stedens note.
 
+## Indstillinger
+
+Fjerde fane (tandhjul). Øverst **Udseende** som en `SingleChoiceSegmentedButtonRow` (System/Lys/Mørk med ikoner) — valget ligger i "udseende"-præferencen og styrer `JagtFokusTheme`, så hele appen skifter med det samme. Så **Lister** med "Sammenfold grupper". Derefter Om-sektionerne i samme liste, som iOS: Data (kilde, opdateret, bekendtgørelsen), Ansvar, Schweiss-registret (skubbet ind som skærm, ikke ark), Fotos, Privatliv og Denne app med Version (fra PackageManager) og Dataversion (fra kataloget).
+
 ## Endnu ikke bygget
 
-Indstillinger-fanen, Om, onboarding.
+Velkomst.

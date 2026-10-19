@@ -231,6 +231,34 @@
     <string name="no_results">Ingen resultater for “%1$s”</string>
     <string name="clear_search">Ryd søgningen</string>
 
+    <string name="settings_tab">Indstillinger</string>
+    <string name="appearance">Udseende</string>
+    <string name="appearance_system">System</string>
+    <string name="appearance_light">Lys</string>
+    <string name="appearance_dark">Mørk</string>
+    <string name="appearance_footer">System følger telefonens indstilling for lys og mørk.</string>
+    <string name="lists_header">Lister</string>
+    <string name="disclaimer">JagtFokus viser jagttider ud fra bekendtgørelsen, valgt dato og sted. Listen kan være ufuldstændig eller forældet. Særlige regler (område, køn, kvote, jagtform) står i noten og i loven. Du er selv ansvarlig for at jage lovligt.</string>
+    <string name="daylight">Jagt må som hovedregel kun ske mellem solopgang og solnedgang. Appen viser soltider, men tjekker ikke klokkeslæt.</string>
+    <string name="about_data">Data</string>
+    <string name="updated">Opdateret</string>
+    <string name="about_responsibility">Ansvar</string>
+    <string name="about_photos">Fotos</string>
+    <string name="photos_from_commons">Artsfotos fra Wikimedia Commons</string>
+    <string name="open_commons">Åbn Wikimedia Commons</string>
+    <string name="photos_licence">Licenser: CC0, public domain, CC BY og CC BY-SA. Fotograf og licens står under hvert billede. Billederne er beskåret og skaleret.</string>
+    <string name="about_privacy">Privatliv</string>
+    <string name="no_account">Ingen konto</string>
+    <string name="no_tracking">Ingen tracking</string>
+    <string name="location_stays">Din position bliver på telefonen</string>
+    <string name="works_offline">Virker offline</string>
+    <string name="about_this_app">Denne app</string>
+    <string name="app_tagline">Jagttider efter dato og sted</string>
+    <string name="app_version">Version</string>
+    <string name="data_version">Dataversion</string>
+    <string name="data_version_value">v%1$d</string>
+    <string name="wounded_and_hit">Anskudt og påkørt hjortevildt.</string>
+
     <plurals name="pieces">
         <item quantity="one">%d stykke</item>
         <item quantity="other">%d stykker</item>

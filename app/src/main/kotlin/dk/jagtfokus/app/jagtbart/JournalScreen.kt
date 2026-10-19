@@ -52,6 +52,7 @@ import androidx.core.content.ContextCompat
 import dk.jagtfokus.app.R
 import dk.jagtfokus.app.ui.QueryRow
 import dk.jagtfokus.app.ui.SectionCard
+import dk.jagtfokus.app.ui.capitalizedFirst
 import dk.jagtfokus.app.ui.theme.LocalSeasonColors
 import dk.jagtfokus.app.ui.theme.Spacing
 import dk.jagtfokus.core.Place
@@ -426,5 +427,3 @@ private fun RecordConfirmation(
     }
 }
 
-private fun String.capitalizedFirst(locale: Locale): String =
-    replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }

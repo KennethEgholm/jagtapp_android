@@ -231,6 +231,34 @@
     <string name="no_results">No results for “%1$s”</string>
     <string name="clear_search">Clear the search</string>
 
+    <string name="settings_tab">Settings</string>
+    <string name="appearance">Appearance</string>
+    <string name="appearance_system">System</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="appearance_footer">System follows the phone\'s light and dark setting.</string>
+    <string name="lists_header">Lists</string>
+    <string name="disclaimer">JagtFokus shows open seasons from the hunting regulations, the date and the place you pick. The list may be incomplete or out of date. Special rules (area, sex, quota, hunting method) are in the note and in the law. You are responsible for hunting legally.</string>
+    <string name="daylight">As a rule you may hunt only between sunrise and sunset. The app shows sun times, but does not check the clock.</string>
+    <string name="about_data">Data</string>
+    <string name="updated">Updated</string>
+    <string name="about_responsibility">Responsibility</string>
+    <string name="about_photos">Photos</string>
+    <string name="photos_from_commons">Species photos from Wikimedia Commons</string>
+    <string name="open_commons">Open Wikimedia Commons</string>
+    <string name="photos_licence">Licences: CC0, public domain, CC BY and CC BY-SA. The photographer and the licence are shown under each image. Images are cropped and scaled.</string>
+    <string name="about_privacy">Privacy</string>
+    <string name="no_account">No account</string>
+    <string name="no_tracking">No tracking</string>
+    <string name="location_stays">Your location stays on your phone</string>
+    <string name="works_offline">Works offline</string>
+    <string name="about_this_app">This app</string>
+    <string name="app_tagline">Seasons by date and place</string>
+    <string name="app_version">Version</string>
+    <string name="data_version">Data version</string>
+    <string name="data_version_value">v%1$d</string>
+    <string name="wounded_and_hit">Wounded and vehicle-hit deer.</string>
+
     <plurals name="pieces">
         <item quantity="one">%d animal</item>
         <item quantity="other">%d animals</item>
