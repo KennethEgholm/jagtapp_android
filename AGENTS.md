@@ -154,6 +154,8 @@ Source of truth: `../jagtapp/data/jagttider.json`. This repo keeps a copy in `da
 
 Biology and photo credits are copies too: `data/biologi.json` and `data/species-photos.json` come from `../jagtapp/App/JagtFokus/Resources/`, and the images from `../jagtapp/App/JagtFokus/Assets.xcassets/SpeciesPhotos/photo-<id>.imageset/` into `app/src/main/assets/photos/photo-<id>.jpg`. The tests pin every species to a taxon and a photo.
 
+The launcher icon is the iOS icon too: the foreground layers in `res/mipmap-*/ic_launcher_foreground.png` are `../jagtapp/assets/icons/AppIcon-1024.png` with the white corners replaced by the art's own green, so masks cut into art, never white.
+
 The same remote URL will overwrite the bundle later, only when `version` is newer:
 
 `https://raw.githubusercontent.com/KennethEgholm/jagtapp/main/data/jagttider.json`

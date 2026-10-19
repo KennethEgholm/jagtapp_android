@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The art's own dark green, so masks cut into the art's edges, never into white. -->
+    <color name="ic_launcher_background">#0A2015</color>
+</resources>
