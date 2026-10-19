@@ -117,6 +117,7 @@ fun JagtbartScreen(
     photos: SpeciesPhotos?,
     initialDate: LocalDate?,
     initialPlaceId: String?,
+    initialSheet: String? = null,
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -156,6 +157,12 @@ fun JagtbartScreen(
     var showDate by remember { mutableStateOf(false) }
     var showPlace by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var showSchweiss by remember { mutableStateOf(false) }
+
+    // Debug launch arguments, same idea as iOS: `-sheet schweiss` opens the sheet.
+    LaunchedEffect(initialSheet) {
+        if (initialSheet == "schweiss") showSchweiss = true
+    }
     var route by remember { mutableStateOf<JagtRoute>(JagtRoute.List) }
     val folding = remember { GroupFolding(context.applicationContext) }
     val snackbar = androidx.compose.material3.SnackbarHostState()
@@ -223,6 +230,9 @@ fun JagtbartScreen(
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
                 actions = {
+                    androidx.compose.material3.TextButton(onClick = { showSchweiss = true }) {
+                        Text(stringResource(R.string.schweiss_toolbar))
+                    }
                     androidx.compose.material3.TextButton(onClick = { showSettings = true }) {
                         Text(stringResource(R.string.settings))
                     }
@@ -327,6 +337,10 @@ fun JagtbartScreen(
 
     if (showSettings) {
         SettingsSheet(folding.collapse, onChange = folding::set, onDismiss = { showSettings = false })
+    }
+
+    if (showSchweiss) {
+        SchweissSheet(onDismiss = { showSchweiss = false })
     }
 
     if (showDate) {

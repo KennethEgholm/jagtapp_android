@@ -160,6 +160,32 @@
     <string name="group_honsefugle">Game birds</string>
     <string name="group_ovrige_fugle">Other birds</string>
 
+    <string name="schweiss_title">The Schweiss register</string>
+    <string name="schweiss_toolbar">Wounded</string>
+    <string name="schweiss_open">Open the Schweiss register</string>
+    <string name="schweiss_hunt_heading">Wounded during a hunt</string>
+    <string name="schweiss_hunt_duty">If there are signs that deer has been wounded and the animal has not been found, you must call a handler from the Schweiss register no later than six daylight hours afterwards.</string>
+    <string name="schweiss_find_handler">Find a handler at schweiss.dk</string>
+    <string name="schweiss_site_hint">Opens schweiss.dk</string>
+    <string name="schweiss_source">Source at the Danish Nature Agency</string>
+    <string name="schweiss_source_hint">Opens the Danish Nature Agency</string>
+    <string name="schweiss_hunt_footer">From the Danish Nature Agency. The app is not the law. The page needs a connection.</string>
+    <string name="schweiss_traffic_heading">Deer hit by a vehicle</string>
+    <string name="schweiss_call_1812">Call 1812</string>
+    <string name="schweiss_call_1812_label">Call 1812, the Danish Animal Welfare Society emergency line</string>
+    <string name="schweiss_traffic_footer">Call if the animal is not dead. The emergency line contacts a Schweiss handler if it has run off. Mark the spot clearly in the verge, and say where, what happened and which way it ran.</string>
+    <string name="schweiss_about_heading">About the register</string>
+    <string name="schweiss_about">The Schweiss register is volunteer handlers with specially trained dogs. They are authorised by the Danish Nature Agency and may track and put down wounded game on another person\'s land. You pay for travel only.</string>
+    <string name="schweiss_referral">The person you call must make sure the search gets solved. It is not necessarily the person who arrives.</string>
+    <string name="schweiss_about_link">About the register</string>
+    <string name="schweiss_rules">Rules</string>
+    <string name="schweiss_expect">What can I expect?</string>
+    <string name="schweiss_secretariat_heading">The Schweiss secretariat</string>
+    <string name="schweiss_call_secretariat">Call 93 59 70 80</string>
+    <string name="schweiss_call_secretariat_label">Call 93 59 70 80, the Schweiss secretariat</string>
+    <string name="schweiss_mail_hint">Emails the Schweiss secretariat</string>
+    <string name="schweiss_secretariat_footer">Weekday contact. Not an emergency line.</string>
+
     <plurals name="species_open">
         <item quantity="one">species is huntable</item>
         <item quantity="other">species are huntable</item>

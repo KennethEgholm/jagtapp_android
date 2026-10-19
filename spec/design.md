@@ -27,6 +27,10 @@ Ikon-nærvær, fordi Material-sættet mangler SF-symboler: solopgang/solnedgang 
 
 Artsdetaljen fra Jagtbart viser status. Den har foto og biologi som iOS: fotoet står under overskriften i 3:2 med kreditlinje, biologi (latinsk navn, “I Danmark”, “Yngel” og kildelinks) under noten, før jagtkilden. Billedet ligger i `app/src/main/assets/photos/` som `photo-<id>.jpg`, så et manglende billede bare udelader kortet. Den har ikke journalknap endnu.
 
+## Schweiss-registret
+
+Ikke en fane. **Anskudt**-knappen står i toppen af Jagtbart ved siden af Indstillinger og åbner et `ModalBottomSheet`. Indholdet (`SchweissContent`) genbruges, når Om bliver bygget og skubber det ind. To veje, begge synlige, ingen omskifter: Anskudt under jagt (link til schweiss.dk og Naturstyrelsen) og påkørt hjortevildt (Ring 1812). Telefonnumre åbner opkalds-appen via `ACTION_DIAL`, mail åbner mail-appen, nettet åbner browseren. Seks dagtimer er tekst med kilde. Ingen timer. Ingen telefonliste, ingen scrape. Appen er ikke loven.
+
 ## Endnu ikke bygget
 
-Schweiss, journal, øvrige faner, onboarding. Ingen bundnavigation med én fane.
+Journal, øvrige faner, onboarding. Ingen bundnavigation med én fane.

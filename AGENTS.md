@@ -65,15 +65,15 @@ Built:
 2. **Sol og vejr** — pushed from the sun card. Display only. MET Norway. Sun and moon are calculated on the phone.
 3. **Artsdetalje** — pushed from Jagtbart, so it shows status. Photo and biology like iOS; no journal button yet.
 4. **Sammenfold grupper** — a sheet from Indstillinger in the top bar, until the settings tab exists. Default on.
+5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar. Same content will be pushed from Om, once Om exists. No handler phone list, no Anskudt button on rows.
 
 Not built yet. Do not invent them. The iOS app is the spec:
 
-5. Alle arter
-6. Indstillinger as a tab
-7. Journal
-8. Om
-9. Velkomst
-10. Schweiss-registret — no Anskudt button
+6. Alle arter
+7. Indstillinger as a tab
+8. Journal
+9. Om
+10. Velkomst
 
 No bottom bar until there is a second destination.
 
@@ -131,7 +131,7 @@ adb shell am force-stop dk.jagtfokus.app
 adb shell am start -n dk.jagtfokus.app/.MainActivity --es place als --es date 2026-11-15
 ```
 
-The emulator has no GPS. A debug `place` extra skips “here”, so the list does not wait for a fix.
+The emulator has no GPS. A debug `place` extra skips “here”, so the list does not wait for a fix. A debug `sheet` extra opens a sheet, e.g. `--es sheet schweiss` for the Schweiss register.
 
 An emulator (AVD `Pixel_10`) is installed on this machine and runs the app. `adb` is not on `PATH`; use `/opt/homebrew/share/android-commandlinetools/platform-tools/adb`. Install and start:
 

@@ -36,6 +36,9 @@ class MainActivity : ComponentActivity() {
             }
         }
         val placeId = intent.getStringExtra("place")
+        // Same idea as the iOS launch arguments: `-sheet schweiss` opens the sheet. Debug only.
+        val debuggable = applicationContext.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val sheet = if (debuggable) intent.getStringExtra("sheet") else null
         setContent {
             JagtFokusTheme {
                 if (catalog == null) {
@@ -46,7 +49,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 } else {
-                    JagtbartScreen(catalog, biology, photos, date, placeId)
+                    JagtbartScreen(catalog, biology, photos, date, placeId, initialSheet = sheet)
                 }
             }
         }

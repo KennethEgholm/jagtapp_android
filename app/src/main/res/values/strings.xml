@@ -160,6 +160,32 @@
     <string name="group_honsefugle">Hønsefugle</string>
     <string name="group_ovrige_fugle">Øvrige fugle</string>
 
+    <string name="schweiss_title">Schweiss-registret</string>
+    <string name="schweiss_toolbar">Anskudt</string>
+    <string name="schweiss_open">Åbn Schweiss-registret</string>
+    <string name="schweiss_hunt_heading">Anskudt under jagt</string>
+    <string name="schweiss_hunt_duty">Er der tegn på anskydning af hjortevildt, og dyret ikke er fundet, skal du senest efter seks dagtimer tilkalde en hundefører fra Schweiss-registret.</string>
+    <string name="schweiss_find_handler">Find hundefører på schweiss.dk</string>
+    <string name="schweiss_site_hint">Åbner schweiss.dk</string>
+    <string name="schweiss_source">Kilde hos Naturstyrelsen</string>
+    <string name="schweiss_source_hint">Åbner Naturstyrelsen</string>
+    <string name="schweiss_hunt_footer">Ifølge Naturstyrelsen. Appen er ikke loven. Siden kræver net.</string>
+    <string name="schweiss_traffic_heading">Påkørt hjortevildt</string>
+    <string name="schweiss_call_1812">Ring 1812</string>
+    <string name="schweiss_call_1812_label">Ring 1812, Dyrenes Beskyttelses Vagtcentral</string>
+    <string name="schweiss_traffic_footer">Ring, hvis dyret ikke er dødt. Vagtcentralen kontakter en schweisshundefører, hvis det er løbet væk. Afmærk stedet tydeligt i rabatten, og oplys sted, hændelse og flugtretning.</string>
+    <string name="schweiss_about_heading">Om registret</string>
+    <string name="schweiss_about">Schweiss-registret er frivillige hundeførere med specialtrænede hunde. De er legitimeret af Naturstyrelsen og må eftersøge og aflive nødstedt vildt på anden mands grund. Du betaler kun kørsel.</string>
+    <string name="schweiss_referral">Den du ringer til, skal sikre at eftersøgningen bliver løst. Det er ikke sikkert, det er den person, der kommer.</string>
+    <string name="schweiss_about_link">Om registret</string>
+    <string name="schweiss_rules">Regler</string>
+    <string name="schweiss_expect">Hvad kan jeg forvente?</string>
+    <string name="schweiss_secretariat_heading">Schweiss-sekretariatet</string>
+    <string name="schweiss_call_secretariat">Ring 93 59 70 80</string>
+    <string name="schweiss_call_secretariat_label">Ring 93 59 70 80, Schweiss-sekretariatet</string>
+    <string name="schweiss_mail_hint">Skriver til Schweiss-sekretariatet</string>
+    <string name="schweiss_secretariat_footer">Hverdagskontakt. Ikke en vagttelefon.</string>
+
     <plurals name="species_open">
         <item quantity="one">art er jagtbar</item>
         <item quantity="other">arter er jagtbare</item>
