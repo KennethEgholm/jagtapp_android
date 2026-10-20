@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import dk.jagtfokus.app.data.RemoteOutcome
+import dk.jagtfokus.app.ui.BrandMark
 import dk.jagtfokus.app.ui.cardListItemColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -287,11 +288,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.brand_mark),
-                            contentDescription = null,
-                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(44.dp * 0.225f)),
-                        )
+                        BrandMark(44.dp)
                         Column {
                             Text("JagtFokus", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             Text(

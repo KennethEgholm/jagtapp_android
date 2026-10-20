@@ -81,9 +81,6 @@ class BagStore(filesDir: File) {
     /** Entry the confirmation refers to. */
     var pendingId by mutableStateOf<String?>(null)
         private set
-    /** Bumped when a swipe action or species page records from another tab. */
-    var tabRequests by mutableIntStateOf(0)
-        private set
     /** Bumped on every note and +1, so the screen can give haptic feedback. */
     var saves by mutableIntStateOf(0)
         private set
@@ -112,11 +109,6 @@ class BagStore(filesDir: File) {
         saves += 1
         persist(saved)
         persistChecklist()
-    }
-
-    fun recordAndSwitchTab(speciesId: String, date: LocalDate, placeId: String?) {
-        record(speciesId, date, placeId)
-        tabRequests += 1
     }
 
     fun incrementPending() {

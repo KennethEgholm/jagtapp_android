@@ -51,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.BrandMark
 import dk.jagtfokus.app.ui.theme.BrandDeep
 import dk.jagtfokus.app.ui.theme.BrandGold
 import dk.jagtfokus.app.ui.theme.BrandGlow
@@ -89,11 +90,7 @@ fun WelcomeScreen(onAccept: () -> Unit) {
                 .padding(horizontal = Spacing.l),
         ) {
             Spacer(Modifier.height(Spacing.xl))
-            Image(
-                painter = painterResource(R.drawable.brand_mark),
-                contentDescription = null,
-                modifier = Modifier.size(76.dp).clip(RoundedCornerShape(76.dp * 0.225f)),
-            )
+            BrandMark(76.dp)
             Text(
                 stringResource(R.string.welcome_title),
                 style = MaterialTheme.typography.headlineLarge,
