@@ -28,10 +28,10 @@ import dk.jagtfokus.core.SeasonTimeline
 @Composable
 fun SeasonBar(
     periods: List<SeasonPeriod>,
+    modifier: Modifier = Modifier,
     marker: MonthDay? = null,
     height: Dp = 12.dp,
     showsMonths: Boolean = false,
-    modifier: Modifier = Modifier,
 ) {
     val open = LocalSeasonColors.current.open
     val track = MaterialTheme.colorScheme.surfaceContainerHighest

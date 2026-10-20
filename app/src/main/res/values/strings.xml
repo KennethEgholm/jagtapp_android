@@ -47,7 +47,7 @@
     <string name="date_at">%1$s, %2$s</string>
     <string name="shown">Vist</string>
     <string name="hidden">Skjult</string>
-    <string name="selected">Valgt</string>
+    <string name="picker_selected">Valgt</string>
     <string name="choose_another_day">Vælg en anden dag</string>
     <string name="choose_another_place">Vælg et andet sted</string>
     <string name="show_species">Viser arterne i gruppen</string>
@@ -85,8 +85,6 @@
     <string name="weather_horizon">Vejret vises kun for de næste ti dage.</string>
     <string name="weather_source">Kilde: Meteorologisk institutt (MET). Vejr og måne er kun visning.</string>
     <string name="max_min">Maks %1$s° · Min %2$s°</string>
-    <string name="up_to">Op til %1$s m/s</string>
-    <string name="up_to_from">Op til %1$s m/s fra %2$s</string>
     <string name="wind_from">%1$s m/s fra %2$s</string>
     <string name="wind_up_to">Op til %1$s m/s</string>
     <string name="wind_up_to_from">Op til %1$s m/s fra %2$s</string>
@@ -172,7 +170,6 @@
     <string name="source">Kilde</string>
     <string name="open_regulation">Åbn bekendtgørelsen</string>
     <string name="not_the_law">Appen er ikke loven. Tjek altid bekendtgørelsen og lokale regler.</string>
-    <string name="settings">Indstillinger</string>
     <string name="collapse_groups">Sammenfold grupper</string>
     <string name="collapse_groups_footer">Jagtbart og Alle arter starter med grupperne lukket. Slå fra for at se alle arter med det samme.</string>
     <string name="data_updated">Opdateret fra net</string>
@@ -227,7 +224,6 @@
     <string name="hunting_year_of">Jagtåret %1$s</string>
     <string name="species_list_title">Artsliste</string>
     <string name="species_list_add">Tilføj</string>
-    <string name="species_list_remove">Fjern</string>
     <string name="species_list_empty">Ingen arter.</string>
     <string name="species_list_footer">Swipe fjerner arten her. Journalen ændres ikke.</string>
     <string name="species_list_add_hint">Sætter arten på artslisten eller tager den af</string>
