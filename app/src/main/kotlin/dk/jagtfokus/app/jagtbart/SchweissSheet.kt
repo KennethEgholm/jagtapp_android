@@ -28,9 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.cardListItemColors
 import dk.jagtfokus.app.ui.theme.Spacing
 
 /**
@@ -127,7 +130,7 @@ private fun SchweissSection(
             heading,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
         )
         content()
         if (footer != null) {
@@ -153,8 +156,9 @@ private fun SiteLink(
     ListItem(
         headlineContent = { Text(title, color = MaterialTheme.colorScheme.primary) },
         leadingContent = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+        colors = cardListItemColors(),
         modifier = Modifier
-            .clickable { open(context, url) }
+            .clickable(role = Role.Button) { open(context, url) }
             .semantics {
                 contentDescription = listOfNotNull(title, hint).joinToString(". ")
             },
@@ -168,8 +172,9 @@ private fun CallLink(title: String, url: String, label: String) {
     ListItem(
         headlineContent = { Text(title, color = MaterialTheme.colorScheme.primary) },
         leadingContent = { Icon(Icons.Outlined.Call, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+        colors = cardListItemColors(),
         modifier = Modifier
-            .clickable { open(context, url) }
+            .clickable(role = Role.Button) { open(context, url) }
             .semantics { contentDescription = label },
     )
 }
