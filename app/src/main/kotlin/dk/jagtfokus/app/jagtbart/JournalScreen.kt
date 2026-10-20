@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,21 +18,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Assignment
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.MyLocation
-import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,12 +56,18 @@ import dk.jagtfokus.app.ui.appLocale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.DatePlaceCard
 import dk.jagtfokus.app.ui.QueryRow
 import dk.jagtfokus.app.ui.SectionCard
 import dk.jagtfokus.app.ui.capitalizedFirst
@@ -87,14 +96,33 @@ fun JournalScreen(
 ) {
     val context = LocalContext.current
     val locale = appLocale()
+    val scope = rememberCoroutineScope()
     var route by rememberSaveable(stateSaver = JournalRouteSaver) { mutableStateOf<JournalRoute>(JournalRoute.Root) }
     var showDate by remember { mutableStateOf(false) }
     var showPlace by remember { mutableStateOf(false) }
-    BackHandler(route != JournalRoute.Root) { route = JournalRoute.Root }
+    // Back from Ret returns to the year list it came from; the other pages return to the root.
+    BackHandler(route != JournalRoute.Root) { route = route.parent() }
+    val snackbar = remember { SnackbarHostState() }
+    val removedText = stringResource(R.string.entry_removed)
+    val undoText = stringResource(R.string.undo)
+    fun deleteWithUndo(id: String) {
+        val entry = bag.journal.entry(id) ?: return
+        bag.remove(id)
+        scope.launch {
+            snackbar.currentSnackbarData?.dismiss()
+            val result = snackbar.showSnackbar(removedText, undoText, duration = SnackbarDuration.Long)
+            if (result == SnackbarResult.ActionPerformed) bag.restore(entry)
+        }
+    }
+    // A note or +1 gives a tap back. Not on the first composition, only on a new save.
+    val haptic = LocalHapticFeedback.current
+    val savesAtStart = remember { bag.saves }
+    LaunchedEffect(bag.saves) {
+        if (bag.saves != savesAtStart) haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+    }
     // Above the route switch, so Back from a page lands on the same scroll position.
     val listState = rememberLazyListState()
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val scope = rememberCoroutineScope()
     ReselectEffect(reselect) {
         val wasRoot = route == JournalRoute.Root
         route = JournalRoute.Root
@@ -114,7 +142,7 @@ fun JournalScreen(
     }
 
     val bagDate = bag.draft.date(vm.now)
-    val bagPlace = bag.draft.place(vm.now, vm.gpsPlace, vm.catalog.denmark)
+    val bagPlace = bag.draft.place(vm.gpsPlace, vm.locationState, vm.catalog.denmark)
     val openHere = remember(bagPlace.id, bagDate, vm.catalog) {
         val sections = vm.catalog.resolvedSections(bagPlace)
         calendar.openGroups(sections, bagDate).flatMap { group -> group.species }
@@ -151,10 +179,22 @@ fun JournalScreen(
             onHideDate = { showDate = false },
             onHidePlace = { showPlace = false },
         )
-        JournalRoute.Year -> YearListScreen(vm, bag, calendar, year, onBack = { route = JournalRoute.Root }, onEdit = { id -> route = JournalRoute.Edit(id) })
+        JournalRoute.Year -> YearListScreen(
+            vm, bag, calendar, year, snackbar,
+            onBack = { route = JournalRoute.Root },
+            onEdit = { id -> route = JournalRoute.Edit(id) },
+            onDelete = ::deleteWithUndo,
+        )
         JournalRoute.SpeciesList -> SpeciesListScreen(vm, bag) { route = JournalRoute.Root }
         JournalRoute.Search -> BagSearchScreen(vm, bag, calendar) { route = JournalRoute.Root }
-        is JournalRoute.Edit -> BagEditScreen(vm, bag, calendar, currentRoute.id) { route = JournalRoute.Root }
+        is JournalRoute.Edit -> BagEditScreen(
+            vm, bag, calendar, currentRoute.id,
+            onBack = { route = JournalRoute.Year },
+            onDelete = {
+                deleteWithUndo(currentRoute.id)
+                route = JournalRoute.Year
+            },
+        )
     }
 }
 
@@ -180,6 +220,8 @@ private val JournalRouteSaver = Saver<JournalRoute, String>(
 )
 
 private sealed interface JournalRoute {
+    fun parent(): JournalRoute = if (this is Edit) Year else Root
+
     data object Root : JournalRoute
     data object Year : JournalRoute
     data object SpeciesList : JournalRoute
@@ -222,7 +264,7 @@ private fun JournalTab(
         vm.catalog.allSpecies.firstOrNull { it.id == entry.speciesId }?.name
     }
     fun record(item: ResolvedSpecies) {
-        bag.record(item.id, bagDate, bag.draft.placeId(vm.gpsPlace))
+        bag.record(item.id, bagDate, bag.draft.placeId(vm.gpsPlace, vm.locationState))
     }
 
     Scaffold(
@@ -268,7 +310,7 @@ private fun JournalTab(
                             } else {
                                 pluralStringResource(R.plurals.pieces, summary.pieces, summary.pieces)
                             },
-                            detail = stringResource(R.string.hunting_year_of, calendar.huntingYearLabel(year)),
+                            detail = calendar.huntingYearLabel(year),
                             hint = stringResource(R.string.bag_year_hint),
                             onClick = {
                                 bag.clearPending()
@@ -290,32 +332,17 @@ private fun JournalTab(
                 }
             }
             item {
-                SectionCard {
-                    Column {
-                        QueryRow(
-                            icon = Icons.Outlined.CalendarMonth,
-                            title = stringResource(R.string.date),
-                            value = calendar.longDate(bagDate).capitalizedFirst(calendar.locale),
-                            detail = if (bagDate == vm.now) stringResource(R.string.today) else null,
-                            hint = stringResource(R.string.choose_another_day),
-                            onClick = onDate,
-                        )
-                        QueryRow(
-                            icon = if (bag.draft.followHere) Icons.Outlined.MyLocation else Icons.Outlined.Place,
-                            title = stringResource(R.string.place),
-                            value = bagPlace.name,
-                            detail = when {
-                                bag.draft.followHere && vm.locationState == LocationState.Locating ->
-                                    stringResource(R.string.finding_position)
-                                bag.draft.followHere && vm.locationState == LocationState.Found ->
-                                    stringResource(R.string.your_position)
-                                else -> null
-                            },
-                            hint = stringResource(R.string.choose_another_place),
-                            onClick = onPlace,
-                        )
-                    }
-                }
+                DatePlaceCard(
+                    calendar = calendar,
+                    date = bagDate,
+                    today = vm.now,
+                    place = bagPlace,
+                    followHere = bag.draft.followHere,
+                    locationState = vm.locationState,
+                    gpsPlace = vm.gpsPlace,
+                    onDate = onDate,
+                    onPlace = onPlace,
+                )
             }
             if (recent.isNotEmpty()) {
                 item { RecordSection(stringResource(R.string.recently_taken), recent, ::record) }
@@ -394,7 +421,7 @@ private fun RecordSection(
             title,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xs),
+            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xs).semantics { heading() },
         )
         if (species.isEmpty() && emptyText != null) {
             Text(emptyText, Modifier.padding(horizontal = Spacing.xs), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -431,7 +458,12 @@ private fun RecordRow(name: String, onRecord: () -> Unit) {
     }
 }
 
-/** "[Art] noteret" with Fortryd, +1 and Se året. Sits at the bottom until dismissed. */
+/**
+ * "[Art] noteret" with Fortryd, +1 and Se året. Sits at the bottom until dismissed. The text is a
+ * polite live region, so TalkBack says the note and each +1 without taking focus. The buttons
+ * wrap onto a second line when they do not fit, as on iOS.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RecordConfirmation(
     name: String,
@@ -443,12 +475,19 @@ private fun RecordConfirmation(
 ) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(Spacing.m), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    stringResource(R.string.journal_recorded, name),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.weight(1f),
-                )
+            Row(verticalAlignment = Alignment.Top) {
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+                ) {
+                    Text(stringResource(R.string.journal_recorded, name), style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        pluralStringResource(R.plurals.pieces, count, count),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 IconButton(onClick = onClose) {
                     Icon(
                         Icons.Outlined.Close,
@@ -457,21 +496,16 @@ private fun RecordConfirmation(
                     )
                 }
             }
-            Text(
-                pluralStringResource(R.plurals.pieces, count, count),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                TextButton(onClick = onUndo) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+            ) {
+                OutlinedButton(onClick = onUndo) {
                     Text(stringResource(R.string.undo), color = MaterialTheme.colorScheme.error)
                 }
-                TextButton(onClick = onPlusOne) {
-                    Text(stringResource(R.string.plus_one), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                }
-                TextButton(onClick = onSeeYear) { Text(stringResource(R.string.see_year)) }
+                Button(onClick = onPlusOne) { Text(stringResource(R.string.plus_one)) }
+                OutlinedButton(onClick = onSeeYear) { Text(stringResource(R.string.see_year)) }
             }
         }
     }
 }
-
