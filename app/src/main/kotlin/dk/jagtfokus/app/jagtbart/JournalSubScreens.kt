@@ -1,6 +1,5 @@
 package dk.jagtfokus.app.jagtbart
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.foundation.background
@@ -38,20 +37,31 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.stateDescription
+import dk.jagtfokus.app.ui.CountCard
+import dk.jagtfokus.app.ui.cardListItemColors
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -63,7 +73,6 @@ import dk.jagtfokus.app.ui.QueryRow
 import dk.jagtfokus.app.ui.SectionCard
 import dk.jagtfokus.app.ui.groupTitle
 import dk.jagtfokus.app.ui.theme.LocalSeasonColors
-import dk.jagtfokus.app.ui.theme.Radius
 import dk.jagtfokus.app.ui.theme.Spacing
 import dk.jagtfokus.core.BagEntry
 import dk.jagtfokus.core.Place
@@ -75,19 +84,29 @@ import java.time.LocalDate
 /** The year's bag. Empty means no entries, not "nothing taken". Port of BagListView.swift. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun YearListScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar, year: Int, onBack: () -> Unit, onEdit: (String) -> Unit) {
+fun YearListScreen(
+    vm: JagtbartViewModel,
+    bag: BagStore,
+    calendar: SeasonCalendar,
+    year: Int,
+    snackbar: SnackbarHostState,
+    onBack: () -> Unit,
+    onEdit: (String) -> Unit,
+    onDelete: (String) -> Unit,
+) {
     val rows = bag.journal.entries(year)
     val summary = bag.journal.summary(year)
     val months = remember(rows, calendar.locale) { groupByMonth(rows, calendar) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.bag_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.close))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
@@ -100,33 +119,11 @@ fun YearListScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalenda
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
             item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.large),
-                    color = LocalSeasonColors.current.open.copy(alpha = 0.12f),
-                ) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(Spacing.m),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            summary.pieces.toString(),
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (summary.pieces > 0) LocalSeasonColors.current.open else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            if (summary.pieces == 0) stringResource(R.string.no_entries) else pluralStringResource(R.plurals.pieces, summary.pieces, summary.pieces),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            stringResource(R.string.hunting_year_of, calendar.huntingYearLabel(year)),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                CountCard(
+                    count = summary.pieces,
+                    title = pluralStringResource(R.plurals.piece_unit, summary.pieces),
+                    detail = stringResource(R.string.hunting_year_of, calendar.huntingYearLabel(year)),
+                )
             }
             if (rows.isEmpty()) {
                 item {
@@ -143,13 +140,13 @@ fun YearListScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalenda
                             month.title,
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs),
+                            modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xxs).semantics { heading() },
                         )
                     }
                     items(month.entries, key = { it.id }) { entry ->
                         DeletableRow(
-                            onDelete = { bag.remove(entry.id) },
-                            removeLabel = stringResource(R.string.delete),
+                            onDelete = { onDelete(entry.id) },
+                            actionLabel = stringResource(R.string.delete_entry, speciesName(vm, entry.speciesId)),
                         ) {
                             EntryRow(entry, vm, calendar, onEdit = onEdit)
                         }
@@ -159,6 +156,9 @@ fun YearListScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalenda
         }
     }
 }
+
+private fun speciesName(vm: JagtbartViewModel, id: String): String =
+    vm.catalog.allSpecies.firstOrNull { it.id == id }?.name ?: id
 
 private data class MonthGroup(val key: String, val title: String, val entries: List<BagEntry>)
 
@@ -173,14 +173,14 @@ private fun groupByMonth(rows: List<BagEntry>, calendar: SeasonCalendar): List<M
     return order.map { key ->
         val list = grouped[key].orEmpty()
         val title = calendar.monthYear(list.firstOrNull()?.date ?: key).orEmpty()
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(calendar.locale) else it.toString() }
         MonthGroup(key, title, list)
     }
 }
 
 @Composable
 private fun EntryRow(entry: BagEntry, vm: JagtbartViewModel, calendar: SeasonCalendar, onEdit: (String) -> Unit) {
-    val name = vm.catalog.allSpecies.firstOrNull { it.id == entry.speciesId }?.name ?: entry.speciesId
+    val name = speciesName(vm, entry.speciesId)
     val placeName = entry.placeId?.let { vm.catalog.place(it)?.name }
     val date = runCatching { LocalDate.parse(entry.date) }.getOrNull()
     val meta = listOfNotNull(
@@ -207,21 +207,26 @@ private fun EntryRow(entry: BagEntry, vm: JagtbartViewModel, calendar: SeasonCal
     }
 }
 
-/** Swipe left deletes for real. */
+/**
+ * Swipe left deletes, but only past half the row, so a short flick does not lose a note.
+ * TalkBack has no swipe for it, so [actionLabel] is also in the actions menu.
+ */
 @Composable
-private fun DeletableRow(onDelete: () -> Unit, removeLabel: String, content: @Composable () -> Unit) {
+private fun DeletableRow(onDelete: () -> Unit, actionLabel: String, content: @Composable () -> Unit) {
+    val delete by rememberUpdatedState(onDelete)
     val state = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onDelete()
-                true
-            } else {
-                false
-            }
+            if (value == SwipeToDismissBoxValue.EndToStart) delete()
+            // Never settle on "dismissed": the saved state would bring a restored row back blank.
+            false
         },
+        positionalThreshold = { distance -> distance * 0.5f },
     )
     SwipeToDismissBox(
         state = state,
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            customActions = listOf(CustomAccessibilityAction(actionLabel) { delete(); true })
+        },
         enableDismissFromStartToEnd = false,
         backgroundContent = {
             Box(
@@ -232,7 +237,7 @@ private fun DeletableRow(onDelete: () -> Unit, removeLabel: String, content: @Co
             ) {
                 Icon(
                     Icons.Outlined.Delete,
-                    contentDescription = removeLabel,
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.padding(horizontal = Spacing.m),
                 )
@@ -248,12 +253,10 @@ private fun DeletableRow(onDelete: () -> Unit, removeLabel: String, content: @Co
 /** Ret one entry: date, count, place. Saves as it changes, like iOS. Port of BagEditView.swift. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar, id: String, onBack: () -> Unit) {
+fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar, id: String, onBack: () -> Unit, onDelete: () -> Unit) {
     val entry = bag.journal.entry(id)
     var showDate by remember { mutableStateOf(false) }
     var showPlace by remember { mutableStateOf(false) }
-    BackHandler(onBack = onBack)
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -261,7 +264,7 @@ fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar
                 title = { Text(stringResource(R.string.journal_edit)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.close))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
@@ -272,7 +275,8 @@ fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Spacing.m),
         ) {
             if (entry == null) {
                 Text(
@@ -287,7 +291,7 @@ fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar
                         QueryRow(
                             icon = Icons.Outlined.Assignment,
                             title = stringResource(R.string.date),
-                            value = calendar.fullWithYear(date).capitalized(),
+                            value = calendar.fullWithYear(date).capitalized(calendar.locale),
                             detail = null,
                             hint = stringResource(R.string.choose_another_day),
                             onClick = { showDate = true },
@@ -306,11 +310,8 @@ fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar
                     }
                 }
                 TextButton(
-                    onClick = {
-                        bag.remove(id)
-                        onBack()
-                    },
-                    modifier = Modifier.padding(Spacing.l),
+                    onClick = onDelete,
+                    modifier = Modifier.padding(vertical = Spacing.s),
                 ) {
                     Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
@@ -339,9 +340,17 @@ fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar
             onSelect = { picked ->
                 entry?.let { bag.update(it.id, runCatching { LocalDate.parse(it.date) }.getOrDefault(vm.now), it.count, picked.id) }
             },
+            showHere = false,
+            onNone = {
+                entry?.let { bag.update(it.id, runCatching { LocalDate.parse(it.date) }.getOrDefault(vm.now), it.count, null) }
+            },
         )
     }
 }
+
+// iOS Stepper range.
+private const val MIN_COUNT = 1
+private const val MAX_COUNT = 999
 
 @Composable
 private fun CountStepper(count: Int, onChange: (Int) -> Unit) {
@@ -357,17 +366,17 @@ private fun CountStepper(count: Int, onChange: (Int) -> Unit) {
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
         )
-        IconButton(onClick = { if (count > 1) onChange(count - 1) }) {
-            Icon(Icons.Outlined.RemoveCircleOutline, contentDescription = "–", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        IconButton(onClick = { onChange(count - 1) }, enabled = count > MIN_COUNT) {
+            Icon(Icons.Outlined.RemoveCircleOutline, contentDescription = stringResource(R.string.count_decrease))
         }
-        IconButton(onClick = { onChange(count + 1) }) {
-            Icon(Icons.Outlined.AddCircle, contentDescription = "+", tint = MaterialTheme.colorScheme.primary)
+        IconButton(onClick = { onChange(count + 1) }, enabled = count < MAX_COUNT) {
+            Icon(Icons.Outlined.AddCircle, contentDescription = stringResource(R.string.count_increase))
         }
     }
 }
 
-private fun String.capitalized(): String =
-    replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
+private fun String.capitalized(locale: java.util.Locale): String =
+    replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 
 /**
  * Species taken at least once. Not the year's bag, and not a count.
@@ -377,7 +386,6 @@ private fun String.capitalized(): String =
 @Composable
 fun SpeciesListScreen(vm: JagtbartViewModel, bag: BagStore, onBack: () -> Unit) {
     var showAdd by remember { mutableStateOf(false) }
-    val removeLabel = stringResource(R.string.species_list_remove)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -386,7 +394,7 @@ fun SpeciesListScreen(vm: JagtbartViewModel, bag: BagStore, onBack: () -> Unit) 
                 title = { Text(stringResource(R.string.species_list_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.close))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -420,13 +428,13 @@ fun SpeciesListScreen(vm: JagtbartViewModel, bag: BagStore, onBack: () -> Unit) 
                             groupTitle(group.id, group.title),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+                            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
                         )
                     }
                     items(group.species, key = { it.id }) { species ->
                         DeletableRow(
                             onDelete = { bag.removeSpecies(species.id) },
-                            removeLabel = removeLabel,
+                            actionLabel = stringResource(R.string.remove_species, species.name),
                         ) {
                             Text(
                                 species.name,
@@ -443,11 +451,11 @@ fun SpeciesListScreen(vm: JagtbartViewModel, bag: BagStore, onBack: () -> Unit) 
                             stringResource(R.string.unknown_group),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+                            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
                         )
                     }
                     items(unknownIds, key = { "unknown-$it" }) { id ->
-                        DeletableRow(onDelete = { bag.removeSpecies(id) }, removeLabel = removeLabel) {
+                        DeletableRow(onDelete = { bag.removeSpecies(id) }, actionLabel = stringResource(R.string.remove_species, id)) {
                             Text(id, Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s))
                         }
                     }
@@ -473,7 +481,10 @@ fun SpeciesListScreen(vm: JagtbartViewModel, bag: BagStore, onBack: () -> Unit) 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SpeciesListAddSheet(vm: JagtbartViewModel, bag: BagStore, onDismiss: () -> Unit) {
-    var query by remember { mutableStateOf("") }
+    var query by rememberSaveable { mutableStateOf("") }
+    val hint = stringResource(R.string.species_list_add_hint)
+    val on = stringResource(R.string.selection_on)
+    val off = stringResource(R.string.selection_off)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.fillMaxHeight(0.92f)) {
@@ -500,19 +511,25 @@ private fun SpeciesListAddSheet(vm: JagtbartViewModel, bag: BagStore, onDismiss:
                     }
                 },
             )
-            LazyColumn {
-                vm.catalog.groups.forEach { group ->
-                    val species = group.species.filter { TextSearch.matches(it.name, query) }
-                    if (species.isEmpty()) return@forEach
+            val groups = vm.catalog.groups.mapNotNull { group ->
+                val species = group.species.filter { TextSearch.matches(it.name, query) }
+                if (species.isEmpty()) null else group.copy(species = species)
+            }
+            // weight(1f): a long list must not push Færdig off the sheet.
+            LazyColumn(Modifier.weight(1f)) {
+                if (groups.isEmpty()) {
+                    item { NoResults(query) }
+                }
+                groups.forEach { group ->
                     item(key = "group-${group.id}") {
                         Text(
                             groupTitle(group.id, group.title),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+                            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
                         )
                     }
-                    items(species, key = { it.id }) { item ->
+                    items(group.species, key = { it.id }) { item ->
                         val included = bag.speciesList.contains(item.id)
                         ListItem(
                             headlineContent = { Text(item.name) },
@@ -523,10 +540,12 @@ private fun SpeciesListAddSheet(vm: JagtbartViewModel, bag: BagStore, onDismiss:
                                     tint = if (included) LocalSeasonColors.current.open else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             },
+                            colors = cardListItemColors(),
                             modifier = Modifier
-                                .clickable { bag.setSpecies(item.id, !included) }
+                                .toggleable(value = included, role = Role.Checkbox) { bag.setSpecies(item.id, it) }
                                 .semantics {
-                                    contentDescription = item.name
+                                    stateDescription = if (included) on else off
+                                    onClick(label = hint) { bag.setSpecies(item.id, !included); true }
                                 },
                         )
                     }
@@ -544,8 +563,7 @@ private fun SpeciesListAddSheet(vm: JagtbartViewModel, bag: BagStore, onDismiss:
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BagSearchScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar, onBack: () -> Unit) {
-    var query by remember { mutableStateOf("") }
-    BackHandler(onBack = onBack)
+    var query by rememberSaveable { mutableStateOf("") }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -554,7 +572,7 @@ fun BagSearchScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalend
                 title = { Text(stringResource(R.string.journal_search)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.close))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
@@ -586,6 +604,9 @@ fun BagSearchScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalend
                     },
                 )
             }
+            if (species.isEmpty()) {
+                item { NoResults(query) }
+            }
             items(species, key = { it.id }) { item ->
                 val spoken = stringResource(R.string.record_hint, item.name)
                 Row(
@@ -596,7 +617,7 @@ fun BagSearchScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalend
                             bag.record(
                                 item.id,
                                 bag.draft.date(vm.now),
-                                bag.draft.placeId(vm.gpsPlace),
+                                bag.draft.placeId(vm.gpsPlace, vm.locationState),
                             )
                             onBack()
                         }
@@ -608,4 +629,14 @@ fun BagSearchScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalend
             }
         }
     }
+}
+
+/** iOS `ContentUnavailableView.search`: the query is named, so a typo is easy to see. */
+@Composable
+private fun NoResults(query: String) {
+    Text(
+        stringResource(R.string.no_results, query),
+        Modifier.fillMaxWidth().padding(Spacing.l),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }

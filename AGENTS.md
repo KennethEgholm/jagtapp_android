@@ -40,23 +40,35 @@ spec/design.md                     # Android divergences only. Danish
 data/jagttider.json                # Copy of the iOS seasons file. Do not edit seasons here
 core/src/main/kotlin/dk/jagtfokus/core/
   HuntingCatalog.kt                # Models and JSON
+  CatalogCheck.kt                  # Refuses a broken catalog
+  SeasonQuery.kt                   # Places, overrides, matchPlace
+  SeasonCalendar.kt                # Status, spoken status and Copenhagen dates
+  SeasonLists.kt                   # Open groups, closed species, search
+  SeasonTimeline.kt                # SeasonBar segments and month initials
+  SunTimes.kt, MoonPhase.kt        # Calculated on the phone. Display only
+  MetForecast.kt                   # MET Norway parsing. Display only
   SpeciesBiology.kt                # Biology catalog. Display only
   SpeciesPhotos.kt                 # Photo credits. Display only
   BagJournal.kt                    # The bag. Pure logic + codec, JVM tests
-  SeasonQuery.kt                   # Places, overrides, matchPlace
-  SeasonCalendar.kt                # Status and Copenhagen dates
-  SeasonLists.kt                   # Open groups, closed species, search
-  CatalogCheck.kt                  # Refuses a broken catalog
+  SpeciesChecklist.kt              # The species list of the journal
+  BagFileStore.kt                  # Bag files: atomic writes, backup, corrupt preservation
+  BoundedRead.kt                   # Size-capped reads for network bodies
 core/src/test/kotlin/
 app/src/main/kotlin/dk/jagtfokus/app/
-  MainActivity.kt
-  data/CatalogLoader.kt
+  JagtFokusApp.kt                  # Application class. Owns the single BagStore
+  MainActivity.kt                  # Shell: tabs, per-tab state, back, lifecycle, system bars
+  data/                            # CatalogLoader, CatalogRepository (cache + remote), WeatherClient
   location/LocationSource.kt
+  jagtbart/                        # ALL screens and their view models/stores (Jagtbart, Journal,
+                                   #   Alle arter, Indstillinger, Sol og vejr, Artsdetalje,
+                                   #   Schweiss, Velkomst, pickers, BagStore)
+  ui/                              # Components used on two screens or more: SpeciesRow, GroupHeader,
+                                   #   DatePlaceCard, CountCard, SectionCard, LinkRow, LabeledValueRow,
+                                   #   SeasonBar, GroupSketch, weather/moon icons, ReselectEffect, AppLocale
   ui/theme/Theme.kt                # Tokens. No hex in screens
-  jagtbart/                        # The two screens
-  data/BagFileStore.kt             # Bag files with backup and corrupt preservation
 app/src/main/res/values/           # Danish source strings
 app/src/main/res/values-en/        # English
+app/src/main/res/xml/              # backup_rules, data_extraction_rules, locales_config
 ```
 
 ## Screens
@@ -64,7 +76,7 @@ app/src/main/res/values-en/        # English
 Built:
 
 1. **Jagtbart** — heading “Jagtbart vildt efter tid og sted”. Date and place, then the sun card, then the answer card, then open groups, then “Ikke jagtbar her”. Default: today + here. Pull to refresh updates location and, when newer, the catalog.
-2. **Sol og vejr** — pushed from the sun card. Display only. MET Norway. Sun and moon are calculated on the phone.
+2. **Sol og vejr** — pushed from the sun card. Display only. MET Norway. Sun and moon are calculated on the phone. The sun card on Jagtbart shows sunrise, sunset, sky and moon.
 3. **Artsdetalje** — pushed from Jagtbart, so it shows status. Photo, biology and a **Tilføj til journal** row like iOS.
 4. **Indstillinger** — fourth tab. Udseende (System/Lys/Mørk, no Material You), then the Om sections in the same list: Data, Ansvar, Schweiss-registret (pushed, same content as the sheet), Fotos, Privatliv, Denne app with Version and Dataversion. "Sammenfold grupper" lives here now (was a sheet until this tab existed).
 5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar; pushed from Indstillinger's Om section. No handler phone list, no Anskudt button on rows.
@@ -72,14 +84,14 @@ Built:
 7. **Alle arter** — third tab. General seasons for every species, grouped cards that start collapsed (Sammenfold grupper applies; search unfolds groups with hits). No date, no place, no open/closed. Rows have the same bag swipe as Jagtbart. Detail page shows the general context: no status, thin SeasonBar without marker, species note.
 8. **Velkomst** — first start only, before everything. Dark green brand world with the mark, three points (date and place, local seasons, private and offline), the disclaimer in a gold box, and **Forstået**. Explains the location use before the system dialog. Stored in the "velkomst" preference.
 
-Not built yet: nothing left from the iOS spec.
+Not built yet: nothing left from the iOS spec. All screens live in `jagtbart/`.
 
 Bottom bar: Jagtbart, Journal, Alle arter, Indstillinger.
 
 ## Rules
 
 - Date and place decide the Jagtbart list. Not the time of day.
-- Sun times are display only. No logic may use them. They are not in this slice.
+- Sun times are display only. No logic may use them. They exist on the sun card and on Sol og vejr, and nowhere else.
 - Biology is display only. No logic may use it.
 - A local season beats the general one. Island > area > region > Denmark.
 - An empty period means no season at that place.
@@ -99,13 +111,27 @@ Bottom bar: Jagtbart, Journal, Alle arter, Indstillinger.
 - Logic lives in `:core` with tests. Screens only format. Jagtbart's lists come from `openGroups`, `closedSpecies` and `closingSoonCount`. Every search uses `TextSearch`.
 - A component used on two screens lives under `ui/`. Do not copy a row from one feature to another.
 - No glass on content. Only the system's bars and controls.
-- Group icons are a temporary Material stand-in. The iOS line sketches are not ported.
+- Group icons are the ported iOS line sketches, drawn on Canvas in `ui/GroupSketch.kt`. Other icons are Material Icons.
+
+## Shell and state
+
+- No Navigation Compose. Each tab keeps its own route in `rememberSaveable` (string savers, ids only) and sits in a `rememberSaveableStateHolder().SaveableStateProvider(tab.name)`. Scroll positions (`LazyListState`) and top-bar scroll behaviour are hoisted above the route switch so they survive tab switches and rotation.
+- Back on any tab other than Jagtbart goes to Jagtbart; a screen's own `BackHandler` wins. Reselecting the open tab pops to its root and scrolls to top: the shell bumps a counter and screens call `ReselectEffect`.
+- One `BagStore` lives on `JagtFokusApp`. Bag writes go through a single-threaded writer.
+- Debug extras (`date`, `place`, `sheet`) are honoured only when the app is debuggable. Release builds ignore them.
+- Auto Backup is on, with explicit rules in `res/xml/backup_rules.xml` and `data_extraction_rules.xml`: the journal files and preferences are included; the catalog cache and `*.corrupt.json` are not. A restored phone keeps the journal and the `velkomst` flag.
+- Release builds use R8 (minify and resource shrink). `app/proguard-rules.pro` keeps the `dk.jagtfokus.core` serializers. Check a release build on a device after touching serialization.
+- Lint must stay at 0 errors. `OldTargetApi` may stay.
 
 ## Copy and translation
 
 Write the copy in Danish in `values/strings.xml`. Add the English line in `values-en/strings.xml` in the same change. Species names, place names and notes stay in the JSON.
 
 A count that changes the words goes in `plurals`. Do not branch on `count == 1` in Kotlin.
+
+The app language is the `locale_tag` string (`da` or `en`) in the resources. Screens call `appLocale()` (`ui/AppLocale.kt`) and pass it to `SeasonCalendar`; never read the device locale directly. `locales_config.xml` lists da and en for the system's per-app language picker.
+
+English strings quote the iOS English in `../jagtapp/App/JagtFokus/Localizable.xcstrings` verbatim. Strings with no iOS counterpart (for example the delete undo and the count stepper labels) are Android-only.
 
 `SeasonCalendar` takes a locale, so date text is testable. Pass `Locale.forLanguageTag("da-DK")` in tests. Never rely on the machine.
 

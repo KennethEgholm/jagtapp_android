@@ -1,7 +1,7 @@
 package dk.jagtfokus.app.jagtbart
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,18 +10,24 @@ import dk.jagtfokus.app.data.RemoteOutcome
 import dk.jagtfokus.app.data.WeatherClient
 import dk.jagtfokus.core.HuntingCatalog
 import dk.jagtfokus.core.MetDay
+import dk.jagtfokus.core.MetForecast
 import dk.jagtfokus.core.Place
 import dk.jagtfokus.core.SeasonCalendar
 import dk.jagtfokus.core.denmark
 import dk.jagtfokus.core.matchPlace
 import dk.jagtfokus.core.place
 import dk.jagtfokus.app.location.AndroidLocationSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.util.Locale
 
 enum class WeatherUi { Idle, Loading, Loaded, Failed, Unavailable }
+
+private data class WeatherKey(val latitude: Double, val longitude: Double, val on: LocalDate)
 
 enum class LocationState {
     Idle,
@@ -30,6 +36,12 @@ enum class LocationState {
     Denied,
     Unavailable,
 }
+
+/**
+ * The last time the remote catalog was asked, and what came of it. iOS keeps only the
+ * outcome text (`remoteStatus`); [at] lets Indstillinger say when.
+ */
+data class CatalogCheck(val outcome: RemoteOutcome, val at: Instant)
 
 /**
  * Date and place for Jagtbart. The list itself is computed by [SeasonCalendar]
@@ -75,6 +87,13 @@ class JagtbartViewModel(
     var weatherUi by mutableStateOf(WeatherUi.Idle)
         private set
 
+    /**
+     * Result of the latest remote catalog check, from the silent check at start or from pull
+     * to refresh. Null until the first check has finished. Shown in Indstillinger as "Data".
+     */
+    var lastCheck by mutableStateOf<CatalogCheck?>(null)
+        private set
+
     val queryDate: LocalDate
         get() = if (followToday) now else pickedDate
 
@@ -86,6 +105,21 @@ class JagtbartViewModel(
         }
 
     private var locateJob: Job? = null
+    private var weatherJob: Job? = null
+    private var weatherKey: WeatherKey? = null
+    private var weatherRequest: Triple<Double, Double, LocalDate>? = null
+
+    /** The location permission dialog is asked for on its own once per process. */
+    var permissionAsked = false
+        private set
+
+    /** True the first time only. Jagtbart asks for the position when it opens, never again on tab return. */
+    fun claimPermissionPrompt(): Boolean {
+        if (permissionAsked) return false
+        permissionAsked = true
+        return true
+    }
+    private var silentCheckStarted = false
 
     fun onResume() {
         now = LocalDate.now(SeasonCalendar.ZONE)
@@ -119,10 +153,23 @@ class JagtbartViewModel(
         showsClosed = !showsClosed
     }
 
+    /**
+     * Loads MET for a place and day. One request at a time: a new one cancels the old, and a
+     * result counts only if it still answers the latest request (iOS `.task(id:)`). The same
+     * place, day and a good answer or one under way is not asked twice; [reloadWeather] retries.
+     */
     fun loadWeather(latitude: Double, longitude: Double, on: LocalDate) {
-        viewModelScope.launch {
-            weatherUi = WeatherUi.Loading
-            val result = weatherClient.load(latitude, longitude, on, SeasonCalendar.ZONE, java.time.Instant.now())
+        val key = WeatherKey(MetForecast.rounded(latitude), MetForecast.rounded(longitude), on)
+        if (key == weatherKey && weatherUi != WeatherUi.Failed && weatherUi != WeatherUi.Idle) return
+        weatherKey = key
+        weatherRequest = Triple(latitude, longitude, on)
+        weatherJob?.cancel()
+        weather = null
+        weatherUi = WeatherUi.Loading
+        weatherJob = viewModelScope.launch {
+            val result = weatherClient.load(latitude, longitude, on, SeasonCalendar.ZONE, Instant.now())
+            ensureActive()
+            if (weatherKey != key) return@launch
             result.fold(
                 onSuccess = { day ->
                     weather = day
@@ -134,6 +181,13 @@ class JagtbartViewModel(
                 },
             )
         }
+    }
+
+    /** Asks again after a failure. Pull to refresh and opening Sol og vejr call this. */
+    fun reloadWeather() {
+        if (weatherUi != WeatherUi.Failed) return
+        val (latitude, longitude, on) = weatherRequest ?: return
+        loadWeather(latitude, longitude, on)
     }
 
     /** Position is off. Drop the last island, so the list does not keep showing it. */
@@ -160,6 +214,8 @@ class JagtbartViewModel(
                 gpsNames = fix.names
                 gpsPlace = catalog.matchPlace(fix.names)
                 locationState = LocationState.Found
+            } catch (cancelled: CancellationException) {
+                throw cancelled
             } catch (_: Exception) {
                 locationState = LocationState.Unavailable
             } finally {
@@ -168,18 +224,34 @@ class JagtbartViewModel(
         }
     }
 
+    /**
+     * Asks the remote catalog once per process, without spinner or snackbar. iOS does the same
+     * in `SeasonStore.init`. [lastCheck] records the outcome.
+     */
+    fun checkCatalogSilently() {
+        if (silentCheckStarted) return
+        silentCheckStarted = true
+        viewModelScope.launch { fetchCatalog() }
+    }
+
     /** Pull to refresh the catalog. Location is requested by the screen when it is allowed. */
     fun refreshCatalog(onOutcome: (RemoteOutcome) -> Unit) {
         refreshing = true
         viewModelScope.launch {
-            val (outcome, next) = catalogs.refresh(catalog)
-            if (outcome == RemoteOutcome.Updated) {
-                catalog = next
-                pickedPlace = catalog.place(pickedPlace.id) ?: catalog.denmark
-                if (gpsNames.isNotEmpty()) gpsPlace = catalog.matchPlace(gpsNames)
-            }
+            val outcome = fetchCatalog()
             refreshing = false
             onOutcome(outcome)
         }
+    }
+
+    private suspend fun fetchCatalog(): RemoteOutcome {
+        val (outcome, next) = catalogs.refresh(catalog)
+        if (outcome == RemoteOutcome.Updated) {
+            catalog = next
+            pickedPlace = catalog.place(pickedPlace.id) ?: catalog.denmark
+            if (gpsNames.isNotEmpty()) gpsPlace = catalog.matchPlace(gpsNames)
+        }
+        lastCheck = CatalogCheck(outcome, Instant.now())
+        return outcome
     }
 }

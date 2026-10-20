@@ -1,6 +1,7 @@
 package dk.jagtfokus.app.jagtbart
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,6 +17,6 @@ internal class GroupFolding(context: Context) {
 
     fun set(value: Boolean) {
         collapse = value
-        prefs.edit().putBoolean("sammenfoldGrupper", value).apply()
+        prefs.edit { putBoolean("sammenfoldGrupper", value) }
     }
 }

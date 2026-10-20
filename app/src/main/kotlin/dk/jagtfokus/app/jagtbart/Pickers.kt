@@ -3,22 +3,30 @@ package dk.jagtfokus.app.jagtbart
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -28,13 +36,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -76,8 +85,20 @@ fun DatePickerSheet(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     ) {
-        Column {
-            QuickPicks(calendar, today, onSelect)
+        // Scrolls, so the calendar stays reachable with large text.
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            Text(
+                stringResource(R.string.choose_day),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .padding(start = Spacing.l, end = Spacing.l, top = Spacing.l, bottom = Spacing.xs)
+                    .semantics { heading() },
+            )
+            QuickPicks(calendar, today) {
+                // A quick pick is the answer. Close, so "Vælg" cannot put the old date back.
+                onSelect(it)
+                onDismiss()
+            }
             DatePicker(state = state, title = null, headline = null)
         }
     }
@@ -86,13 +107,13 @@ fun DatePickerSheet(
 @Composable
 private fun QuickPicks(calendar: SeasonCalendar, today: LocalDate, onSelect: (LocalDate) -> Unit) {
     val picks = remember(today, calendar.locale) { quickPicks(today) }
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.m, vertical = Spacing.xs),
+    // Scrolls sideways: "Lørdag 24. okt." and "Søndag 25. okt." do not fit beside the others.
+    LazyRow(
+        Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = Spacing.l, vertical = Spacing.xs),
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        picks.forEach { pick ->
+        items(picks, key = { it.kind }) { pick ->
             val label = when (pick.kind) {
                 QuickKind.Today -> stringResource(R.string.today)
                 QuickKind.Tomorrow -> stringResource(R.string.tomorrow)
@@ -107,7 +128,7 @@ private fun QuickPicks(calendar: SeasonCalendar, today: LocalDate, onSelect: (Lo
                     calendar.short(calendar.monthDay(pick.date)),
                 )
             }
-            FilterChip(selected = false, onClick = { onSelect(pick.date) }, label = { Text(label) })
+            SuggestionChip(onClick = { onSelect(pick.date) }, label = { Text(label) })
         }
     }
 }
@@ -144,12 +165,16 @@ fun PlacePickerSheet(
     onDismiss: () -> Unit,
     onHere: () -> Unit,
     onSelect: (Place) -> Unit,
+    /** False hides "Min position / Brug GPS", for a place that is not "here" (Ret). */
+    showHere: Boolean = true,
+    /** Not null adds an "Intet sted" row that calls this and closes (iOS Ret). */
+    onNone: (() -> Unit)? = null,
 ) {
     var query by remember { mutableStateOf("") }
     val sections = placeSections(catalog, query)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.fillMaxHeight(0.92f)) {
+        Column(Modifier.fillMaxHeight(0.92f).imePadding()) {
             Text(
                 stringResource(R.string.choose_place),
                 style = MaterialTheme.typography.titleLarge,
@@ -163,9 +188,21 @@ fun PlacePickerSheet(
                     .padding(horizontal = Spacing.m, vertical = Spacing.xs),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.search_place)) },
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(
+                                Icons.Filled.Cancel,
+                                contentDescription = stringResource(R.string.clear_search),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                },
             )
             LazyColumn(Modifier.weight(1f)) {
-                if (query.isBlank()) {
+                if (query.isBlank() && showHere) {
                     item {
                         HereRow(locationState, gpsPlace, followHere) {
                             onHere()
@@ -177,6 +214,14 @@ fun PlacePickerSheet(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.xs),
                         )
+                    }
+                }
+                if (query.isBlank() && onNone != null) {
+                    item {
+                        NoPlaceRow(selected = !followHere && selectedId.isEmpty()) {
+                            onNone()
+                            onDismiss()
+                        }
                     }
                 }
                 sections.forEach { section ->
@@ -243,6 +288,19 @@ private fun HereRow(
 }
 
 @Composable
+private fun NoPlaceRow(selected: Boolean, onClick: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.no_place)) },
+        trailingContent = { if (selected) SelectedMark() },
+        modifier = Modifier
+            .heightIn(min = 48.dp)
+            .clickable(onClick = onClick)
+            .semantics { this.selected = selected },
+    )
+    HorizontalDivider()
+}
+
+@Composable
 private fun PlaceRow(
     place: Place,
     parent: String?,
@@ -279,7 +337,7 @@ private fun PlaceRow(
 private fun SelectedMark() {
     Icon(
         Icons.Outlined.Check,
-        contentDescription = stringResource(R.string.selected),
+        contentDescription = stringResource(R.string.picker_selected),
         tint = MaterialTheme.colorScheme.primary,
     )
 }

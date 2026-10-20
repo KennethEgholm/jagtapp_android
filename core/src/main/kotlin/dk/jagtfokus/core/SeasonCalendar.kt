@@ -107,6 +107,27 @@ class SeasonCalendar(
         return join(periods.map { "${full(it.from)} $to ${full(it.to)}" })
     }
 
+    /**
+     * What TalkBack says for a status, with months in full: "Jagtbar, sidste dag 31. januar",
+     * "Ikke jagtbar, åbner 1. oktober". Same wording as iOS `StatusCopy.spoken`.
+     */
+    fun spokenStatus(status: SeasonStatus): String {
+        val end = status.endDate
+        val next = status.nextOpening
+        return when {
+            status.isOpen && end != null && status.daysLeft != null -> {
+                val huntable = if (isDanish) "Jagtbar" else "Huntable"
+                val last = if (isDanish) "sidste dag" else "last day"
+                if (status.daysLeft == 0) "$huntable, $last" else "$huntable, $last ${full(monthDay(end))}"
+            }
+            next != null -> {
+                val text = if (isDanish) "Ikke jagtbar, åbner" else "Not huntable, opens"
+                "$text ${full(monthDay(next))}"
+            }
+            else -> noSeason()
+        }
+    }
+
     /** Short day and month: "11. okt." in Danish, "11 Oct" in English. */
     fun short(day: MonthDay): String =
         if (isDanish) "${day.day}. ${shortMonth(day.month)}"

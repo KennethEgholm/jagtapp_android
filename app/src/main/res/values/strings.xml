@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">JagtFokus</string>
+    <string name="locale_tag" translatable="false">da</string>
     <string name="tab_jagtbart">Jagtbart</string>
     <string name="headline">Jagtbart vildt efter tid og sted</string>
     <string name="date">Dato</string>
@@ -13,6 +14,7 @@
     <string name="choose">Vælg</string>
     <string name="cancel">Annuller</string>
     <string name="close">Luk</string>
+    <string name="back">Tilbage</string>
     <string name="choose_place">Vælg sted</string>
     <string name="search_place">Søg ø, område eller region</string>
     <string name="my_position">Min position</string>
@@ -45,7 +47,7 @@
     <string name="date_at">%1$s, %2$s</string>
     <string name="shown">Vist</string>
     <string name="hidden">Skjult</string>
-    <string name="selected">Valgt</string>
+    <string name="picker_selected">Valgt</string>
     <string name="choose_another_day">Vælg en anden dag</string>
     <string name="choose_another_place">Vælg et andet sted</string>
     <string name="show_species">Viser arterne i gruppen</string>
@@ -60,6 +62,12 @@
     <string name="lit">%1$s oplyst</string>
     <string name="basis">%1$s, den %2$s</string>
     <string name="open_sun">Åbn sol og vejr for dagen</string>
+    <string name="sun_spoken">Solopgang %1$s, solnedgang %2$s. %3$s</string>
+    <string name="spoken_max_min">Maks %1$s°, min %2$s°.</string>
+    <string name="spoken_precipitation">Nedbør %1$s mm.</string>
+    <string name="spoken_wind_up_to">Vind op til %1$s m/s.</string>
+    <string name="spoken_wind_up_to_from">Vind op til %1$s m/s fra %2$s.</string>
+    <string name="spoken_moon">%1$s, %2$s oplyst.</string>
     <string name="weather">Vejret</string>
     <string name="temperature">Temperatur</string>
     <string name="precipitation">Nedbør</string>
@@ -77,8 +85,6 @@
     <string name="weather_horizon">Vejret vises kun for de næste ti dage.</string>
     <string name="weather_source">Kilde: Meteorologisk institutt (MET). Vejr og måne er kun visning.</string>
     <string name="max_min">Maks %1$s° · Min %2$s°</string>
-    <string name="up_to">Op til %1$s m/s</string>
-    <string name="up_to_from">Op til %1$s m/s fra %2$s</string>
     <string name="wind_from">%1$s m/s fra %2$s</string>
     <string name="wind_up_to">Op til %1$s m/s</string>
     <string name="wind_up_to_from">Op til %1$s m/s fra %2$s</string>
@@ -99,19 +105,41 @@
     <string name="weather_cloudy">Skyet</string>
     <string name="weather_fog">Tåge</string>
     <string name="weather_rain">Regn</string>
+    <string name="weather_rain_thunder">Regn og torden</string>
+    <string name="weather_rain_showers">Regnbyger</string>
+    <string name="weather_rain_showers_thunder">Regnbyger og torden</string>
     <string name="weather_light_rain">Let regn</string>
+    <string name="weather_light_rain_thunder">Let regn og torden</string>
+    <string name="weather_light_rain_showers">Let regnbyger</string>
+    <string name="weather_light_rain_showers_thunder">Let regnbyger og torden</string>
     <string name="weather_heavy_rain">Kraftig regn</string>
-    <string name="weather_showers">Regnbyger</string>
-    <string name="weather_light_showers">Let regnbyger</string>
-    <string name="weather_heavy_showers">Kraftige regnbyger</string>
+    <string name="weather_heavy_rain_thunder">Kraftig regn og torden</string>
+    <string name="weather_heavy_rain_showers">Kraftige regnbyger</string>
+    <string name="weather_heavy_rain_showers_thunder">Kraftige regnbyger og torden</string>
     <string name="weather_sleet">Slud</string>
+    <string name="weather_sleet_thunder">Slud og torden</string>
+    <string name="weather_sleet_showers">Sludbyger</string>
+    <string name="weather_sleet_showers_thunder">Sludbyger og torden</string>
     <string name="weather_light_sleet">Let slud</string>
+    <string name="weather_light_sleet_thunder">Let slud og torden</string>
+    <string name="weather_light_sleet_showers">Let sludbyger</string>
+    <string name="weather_light_sleet_showers_thunder">Let sludbyger og torden</string>
     <string name="weather_heavy_sleet">Kraftig slud</string>
+    <string name="weather_heavy_sleet_thunder">Kraftig slud og torden</string>
+    <string name="weather_heavy_sleet_showers">Kraftige sludbyger</string>
+    <string name="weather_heavy_sleet_showers_thunder">Kraftige sludbyger og torden</string>
     <string name="weather_snow">Sne</string>
-    <string name="weather_light_snow">Let sne</string>
-    <string name="weather_heavy_snow">Kraftig sne</string>
+    <string name="weather_snow_thunder">Sne og torden</string>
     <string name="weather_snow_showers">Snebyger</string>
-    <string name="weather_thunder">Torden</string>
+    <string name="weather_snow_showers_thunder">Snebyger og torden</string>
+    <string name="weather_light_snow">Let sne</string>
+    <string name="weather_light_snow_thunder">Let sne og torden</string>
+    <string name="weather_light_snow_showers">Let snebyger</string>
+    <string name="weather_light_snow_showers_thunder">Let snebyger og torden</string>
+    <string name="weather_heavy_snow">Kraftig sne</string>
+    <string name="weather_heavy_snow_thunder">Kraftig sne og torden</string>
+    <string name="weather_heavy_snow_showers">Kraftige snebyger</string>
+    <string name="weather_heavy_snow_showers_thunder">Kraftige snebyger og torden</string>
     <string name="moon_new">Nymåne</string>
     <string name="moon_waxing_crescent">Tiltagende månesegl</string>
     <string name="moon_first">Første kvarter</string>
@@ -125,7 +153,6 @@
     <string name="opens">Åbner</string>
     <string name="today_lower">i dag</string>
     <string name="tomorrow_lower">i morgen</string>
-    <string name="in_days">om %1$d dage</string>
     <string name="season_in">Jagttid i %1$s</string>
     <string name="no_season_here">Ingen jagttid her.</string>
     <string name="no_season_year">Ingen jagttid her i jagtåret.</string>
@@ -143,7 +170,6 @@
     <string name="source">Kilde</string>
     <string name="open_regulation">Åbn bekendtgørelsen</string>
     <string name="not_the_law">Appen er ikke loven. Tjek altid bekendtgørelsen og lokale regler.</string>
-    <string name="settings">Indstillinger</string>
     <string name="collapse_groups">Sammenfold grupper</string>
     <string name="collapse_groups_footer">Jagtbart og Alle arter starter med grupperne lukket. Slå fra for at se alle arter med det samme.</string>
     <string name="data_updated">Opdateret fra net</string>
@@ -198,7 +224,6 @@
     <string name="hunting_year_of">Jagtåret %1$s</string>
     <string name="species_list_title">Artsliste</string>
     <string name="species_list_add">Tilføj</string>
-    <string name="species_list_remove">Fjern</string>
     <string name="species_list_empty">Ingen arter.</string>
     <string name="species_list_footer">Swipe fjerner arten her. Journalen ændres ikke.</string>
     <string name="species_list_add_hint">Sætter arten på artslisten eller tager den af</string>
@@ -223,6 +248,13 @@
     <string name="no_place">Intet sted</string>
     <string name="delete">Slet</string>
     <string name="entry_deleted">Posten er slettet.</string>
+    <string name="entry_removed">Slettet</string>
+    <string name="delete_entry">Slet %1$s</string>
+    <string name="remove_species">Fjern %1$s</string>
+    <string name="count_decrease">Formindsk antal</string>
+    <string name="count_increase">Forøg antal</string>
+    <string name="selection_on">Markeret</string>
+    <string name="selection_off">Ikke markeret</string>
     <string name="add_to_journal">Tilføj til journal</string>
     <string name="all_species_tab">Alle arter</string>
     <string name="all_species_info">Generelle jagttider i Danmark. Lokale tider kan afvige. Se dem under Jagtbart.</string>
@@ -271,9 +303,17 @@
     <string name="welcome_accept">Forstået</string>
     <string name="welcome_after">Derefter spørger JagtFokus om din position.</string>
 
+    <plurals name="in_days">
+        <item quantity="one">om %d dag</item>
+        <item quantity="other">om %d dage</item>
+    </plurals>
     <plurals name="pieces">
         <item quantity="one">%d stykke</item>
         <item quantity="other">%d stykker</item>
+    </plurals>
+    <plurals name="piece_unit">
+        <item quantity="one">stykke</item>
+        <item quantity="other">stykker</item>
     </plurals>
     <plurals name="species_count">
         <item quantity="one">%d art</item>

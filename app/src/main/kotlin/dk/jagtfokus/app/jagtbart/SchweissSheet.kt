@@ -2,7 +2,6 @@ package dk.jagtfokus.app.jagtbart
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -28,9 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.core.net.toUri
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.cardListItemColors
 import dk.jagtfokus.app.ui.theme.Spacing
 
 /**
@@ -127,7 +130,7 @@ private fun SchweissSection(
             heading,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
         )
         content()
         if (footer != null) {
@@ -153,8 +156,9 @@ private fun SiteLink(
     ListItem(
         headlineContent = { Text(title, color = MaterialTheme.colorScheme.primary) },
         leadingContent = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+        colors = cardListItemColors(),
         modifier = Modifier
-            .clickable { open(context, url) }
+            .clickable(role = Role.Button) { open(context, url) }
             .semantics {
                 contentDescription = listOfNotNull(title, hint).joinToString(". ")
             },
@@ -168,8 +172,9 @@ private fun CallLink(title: String, url: String, label: String) {
     ListItem(
         headlineContent = { Text(title, color = MaterialTheme.colorScheme.primary) },
         leadingContent = { Icon(Icons.Outlined.Call, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+        colors = cardListItemColors(),
         modifier = Modifier
-            .clickable { open(context, url) }
+            .clickable(role = Role.Button) { open(context, url) }
             .semantics { contentDescription = label },
     )
 }
@@ -177,9 +182,9 @@ private fun CallLink(title: String, url: String, label: String) {
 /** Dial and mail open their own apps; the web opens the browser. */
 private fun open(context: Context, url: String) {
     val intent = when {
-        url.startsWith("tel:") -> Intent(Intent.ACTION_DIAL, Uri.parse(url))
-        url.startsWith("mailto:") -> Intent(Intent.ACTION_SENDTO, Uri.parse(url))
-        else -> Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        url.startsWith("tel:") -> Intent(Intent.ACTION_DIAL, url.toUri())
+        url.startsWith("mailto:") -> Intent(Intent.ACTION_SENDTO, url.toUri())
+        else -> Intent(Intent.ACTION_VIEW, url.toUri())
     }
     runCatching { context.startActivity(intent) }
 }

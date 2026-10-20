@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +33,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -39,6 +51,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.BrandMark
 import dk.jagtfokus.app.ui.theme.BrandDeep
 import dk.jagtfokus.app.ui.theme.BrandGold
 import dk.jagtfokus.app.ui.theme.BrandGlow
@@ -51,6 +64,9 @@ import dk.jagtfokus.app.ui.theme.Spacing
  */
 @Composable
 fun WelcomeScreen(onAccept: () -> Unit) {
+    // The button overlay's height, so the scroll content can end above it.
+    val density = LocalDensity.current
+    var overlayHeight by remember { mutableStateOf(0.dp) }
     Box(
         Modifier
             .fillMaxSize()
@@ -69,15 +85,12 @@ fun WelcomeScreen(onAccept: () -> Unit) {
         Column(
             Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Spacing.l),
         ) {
             Spacer(Modifier.height(Spacing.xl))
-            Image(
-                painter = painterResource(R.drawable.brand_mark),
-                contentDescription = null,
-                modifier = Modifier.size(76.dp),
-            )
+            BrandMark(76.dp)
             Text(
                 stringResource(R.string.welcome_title),
                 style = MaterialTheme.typography.headlineLarge,
@@ -97,17 +110,19 @@ fun WelcomeScreen(onAccept: () -> Unit) {
             Feature(Icons.Outlined.Security, stringResource(R.string.welcome_feature_privacy_title), stringResource(R.string.welcome_feature_privacy))
             Spacer(Modifier.height(Spacing.l))
             ImportantBox()
-            Spacer(Modifier.height(Spacing.l))
+            Spacer(Modifier.height(Spacing.l + overlayHeight))
         }
         Column(
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
+                .onSizeChanged { overlayHeight = with(density) { it.height.toDp() } }
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(BrandDeep.copy(alpha = 0f), BrandDeep),
                     ),
                 )
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal))
                 .padding(horizontal = Spacing.l, vertical = Spacing.s),
         ) {
             Button(

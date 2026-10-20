@@ -21,12 +21,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -34,8 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dk.jagtfokus.app.R
+import dk.jagtfokus.app.ui.LabeledValueRow
 import dk.jagtfokus.app.ui.MoonPhaseIcon
 import dk.jagtfokus.app.ui.SunEventIcon
 import dk.jagtfokus.app.ui.decimal
@@ -65,15 +69,21 @@ fun WeatherScreen(
     weather: MetDay?,
     weatherUi: WeatherUi,
     onBack: () -> Unit,
+    /** Called when the screen opens, so the host can retry a failed forecast. */
+    onAppear: () -> Unit = {},
 ) {
+    LaunchedEffect(Unit) { onAppear() }
     val basis = basisText(place, calendar.full(calendar.monthDay(date)))
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.sun_weather)) },
+                scrollBehavior = scroll,
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.close))
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -211,19 +221,12 @@ private fun FactRow(
     note: String? = null,
     leading: @Composable () -> Unit,
 ) {
-    ListItem(
-        headlineContent = { Text(title) },
-        trailingContent = {
-            Column(horizontalAlignment = Alignment.End) {
-                Text(value, style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"))
-                if (note != null) {
-                    Text(note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        },
-        leadingContent = {
-            Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) { leading() }
-        },
+    LabeledValueRow(
+        label = title,
+        value = value,
+        note = note,
+        valueStyle = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+        leading = { Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) { leading() } },
     )
 }
 
@@ -241,12 +244,14 @@ private fun WindLeading(direction: Double?) {
 fun WindArrow(fromDegrees: Double, modifier: Modifier = Modifier) {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(modifier.size(18.dp)) {
+        val stroke = 2.dp.toPx()
+        val wing = 5.dp.toPx()
         val center = Offset(size.width / 2, size.height / 2)
         // Points the way the wind blows: wind from the east points west, as on weather maps.
         rotate(fromDegrees.toFloat(), center) {
-            drawLine(color, Offset(center.x, size.height * 0.15f), Offset(center.x, size.height * 0.85f), 2f, StrokeCap.Round)
-            drawLine(color, Offset(center.x, size.height * 0.85f), Offset(center.x - 5f, size.height * 0.62f), 2f, StrokeCap.Round)
-            drawLine(color, Offset(center.x, size.height * 0.85f), Offset(center.x + 5f, size.height * 0.62f), 2f, StrokeCap.Round)
+            drawLine(color, Offset(center.x, size.height * 0.15f), Offset(center.x, size.height * 0.85f), stroke, StrokeCap.Round)
+            drawLine(color, Offset(center.x, size.height * 0.85f), Offset(center.x - wing, size.height * 0.62f), stroke, StrokeCap.Round)
+            drawLine(color, Offset(center.x, size.height * 0.85f), Offset(center.x + wing, size.height * 0.62f), stroke, StrokeCap.Round)
         }
     }
 }
@@ -257,7 +262,7 @@ private fun SectionLabel(text: Int) {
         stringResource(text),
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+        modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
     )
 }
 
