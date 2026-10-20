@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
 
 /**
  * One row that opens a web page. Opening is wrapped: a phone without a
@@ -23,6 +24,6 @@ fun LinkRow(text: String, url: String, modifier: Modifier = Modifier) {
         leadingContent = {
             Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         },
-        modifier = modifier.clickable { runCatching { uriHandler.openUri(url) } },
+        modifier = modifier.clickable(role = Role.Button) { runCatching { uriHandler.openUri(url) } },
     )
 }

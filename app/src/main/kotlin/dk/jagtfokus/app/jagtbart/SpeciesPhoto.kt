@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -81,7 +82,7 @@ private fun PhotoCredit(photo: IdentifiedPhoto) {
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .minimumInteractiveComponentSize()
-            .clickable {
+            .clickable(role = Role.Button) {
                 runCatching { uriHandler.openUri(photo.photo.sourceURL) }
             }
             .padding(top = Spacing.xs, bottom = Spacing.xxs, start = Spacing.xxs)
