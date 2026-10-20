@@ -29,8 +29,12 @@ class SeasonTimeline {
         return offset + dayInMonth - 1
     }
 
+    /** The month's initial for the bar's month row, as iOS: J F M A M J J A S O N D by month number. */
+    fun initial(month: Int): String = INITIALS[month - 1]
+
     companion object {
         const val START_MONTH = 4
+        private val INITIALS = listOf("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
         private val DAYS_IN_MONTH = intArrayOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
         private const val LENGTH = 365.0
     }

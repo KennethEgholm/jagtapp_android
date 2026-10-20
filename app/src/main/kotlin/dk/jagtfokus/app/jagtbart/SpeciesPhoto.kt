@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -79,10 +81,11 @@ private fun PhotoCredit(photo: IdentifiedPhoto) {
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .padding(top = Spacing.xs, bottom = Spacing.xxs, start = Spacing.xxs)
-            .clickable {
+            .minimumInteractiveComponentSize()
+            .clickable(role = Role.Button) {
                 runCatching { uriHandler.openUri(photo.photo.sourceURL) }
             }
+            .padding(top = Spacing.xs, bottom = Spacing.xxs, start = Spacing.xxs)
             .semantics {
                 contentDescription = "$credit. $open"
             },

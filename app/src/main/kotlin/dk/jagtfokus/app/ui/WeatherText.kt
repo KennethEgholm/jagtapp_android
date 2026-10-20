@@ -32,6 +32,7 @@ fun windFrom(degrees: Double): Int = when (((degrees + 22.5) / 45).toInt() % 8) 
     else -> R.string.wind_nw
 }
 
+/** The iOS word table (WeatherSymbols.text), verbatim: every code MET lists, null for others. */
 @StringRes
 fun weatherWords(code: String?): Int? {
     val base = code?.substringBefore('_') ?: return null
@@ -42,25 +43,42 @@ fun weatherWords(code: String?): Int? {
         "cloudy" -> R.string.weather_cloudy
         "fog" -> R.string.weather_fog
         "rain" -> R.string.weather_rain
+        "rainandthunder" -> R.string.weather_rain_thunder
+        "rainshowers" -> R.string.weather_rain_showers
+        "rainshowersandthunder" -> R.string.weather_rain_showers_thunder
         "lightrain" -> R.string.weather_light_rain
+        "lightrainandthunder" -> R.string.weather_light_rain_thunder
+        "lightrainshowers" -> R.string.weather_light_rain_showers
+        "lightrainshowersandthunder" -> R.string.weather_light_rain_showers_thunder
         "heavyrain" -> R.string.weather_heavy_rain
-        "rainshowers" -> R.string.weather_showers
-        "lightrainshowers" -> R.string.weather_light_showers
-        "heavyrainshowers" -> R.string.weather_heavy_showers
+        "heavyrainandthunder" -> R.string.weather_heavy_rain_thunder
+        "heavyrainshowers" -> R.string.weather_heavy_rain_showers
+        "heavyrainshowersandthunder" -> R.string.weather_heavy_rain_showers_thunder
         "sleet" -> R.string.weather_sleet
+        "sleetandthunder" -> R.string.weather_sleet_thunder
+        "sleetshowers" -> R.string.weather_sleet_showers
+        "sleetshowersandthunder" -> R.string.weather_sleet_showers_thunder
         "lightsleet" -> R.string.weather_light_sleet
+        "lightsleetandthunder" -> R.string.weather_light_sleet_thunder
+        "lightsleetshowers" -> R.string.weather_light_sleet_showers
+        "lightsleetshowersandthunder" -> R.string.weather_light_sleet_showers_thunder
         "heavysleet" -> R.string.weather_heavy_sleet
+        "heavysleetandthunder" -> R.string.weather_heavy_sleet_thunder
+        "heavysleetshowers" -> R.string.weather_heavy_sleet_showers
+        "heavysleetshowersandthunder" -> R.string.weather_heavy_sleet_showers_thunder
         "snow" -> R.string.weather_snow
-        "lightsnow" -> R.string.weather_light_snow
-        "heavysnow" -> R.string.weather_heavy_snow
+        "snowandthunder" -> R.string.weather_snow_thunder
         "snowshowers" -> R.string.weather_snow_showers
-        else -> when {
-            base.contains("thunder") -> R.string.weather_thunder
-            base.contains("sleet") -> R.string.weather_sleet
-            base.contains("snow") -> R.string.weather_snow
-            base.contains("rain") -> R.string.weather_rain
-            else -> null
-        }
+        "snowshowersandthunder" -> R.string.weather_snow_showers_thunder
+        "lightsnow" -> R.string.weather_light_snow
+        "lightsnowandthunder" -> R.string.weather_light_snow_thunder
+        "lightsnowshowers" -> R.string.weather_light_snow_showers
+        "lightsnowshowersandthunder" -> R.string.weather_light_snow_showers_thunder
+        "heavysnow" -> R.string.weather_heavy_snow
+        "heavysnowandthunder" -> R.string.weather_heavy_snow_thunder
+        "heavysnowshowers" -> R.string.weather_heavy_snow_showers
+        "heavysnowshowersandthunder" -> R.string.weather_heavy_snow_showers_thunder
+        else -> null
     }
 }
 

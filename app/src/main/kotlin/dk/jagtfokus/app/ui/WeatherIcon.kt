@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import dk.jagtfokus.app.ui.theme.Sun
 
 /**
@@ -51,19 +51,19 @@ fun SunEventIcon(rising: Boolean, modifier: Modifier = Modifier, tint: Color = S
     Canvas(modifier) {
         val w = size.width
         val h = size.height
+        val stroke = 1.5f.dp.toPx()
+        val barb = 3.5f.dp.toPx()
+        val barbDrop = 5.dp.toPx()
         val horizon = h * 0.78f
-        drawLine(tint, Offset(0f, horizon), Offset(w, horizon), 1.5f, StrokeCap.Round)
+        drawLine(tint, Offset(0f, horizon), Offset(w, horizon), stroke, StrokeCap.Round)
         drawCircle(tint, radius = h * 0.20f, center = Offset(w / 2f, h * 0.55f))
         val tipTop = h * 0.05f
         val tipBottom = h * 0.32f
-        if (rising) {
-            drawLine(tint, Offset(w / 2f, tipTop), Offset(w / 2f, tipBottom), 1.5f, StrokeCap.Round)
-            drawLine(tint, Offset(w / 2f - 3.5f, tipTop + 5f), Offset(w / 2f, tipTop), 1.5f, StrokeCap.Round)
-            drawLine(tint, Offset(w / 2f + 3.5f, tipTop + 5f), Offset(w / 2f, tipTop), 1.5f, StrokeCap.Round)
-        } else {
-            drawLine(tint, Offset(w / 2f, tipTop), Offset(w / 2f, tipBottom), 1.5f, StrokeCap.Round)
-            drawLine(tint, Offset(w / 2f - 3.5f, tipBottom - 5f), Offset(w / 2f, tipBottom), 1.5f, StrokeCap.Round)
-            drawLine(tint, Offset(w / 2f + 3.5f, tipBottom - 5f), Offset(w / 2f, tipBottom), 1.5f, StrokeCap.Round)
-        }
+        // The arrowhead sits at the tip: top when rising, bottom when setting.
+        val tip = if (rising) tipTop else tipBottom
+        val back = if (rising) barbDrop else -barbDrop
+        drawLine(tint, Offset(w / 2f, tipTop), Offset(w / 2f, tipBottom), stroke, StrokeCap.Round)
+        drawLine(tint, Offset(w / 2f - barb, tip + back), Offset(w / 2f, tip), stroke, StrokeCap.Round)
+        drawLine(tint, Offset(w / 2f + barb, tip + back), Offset(w / 2f, tip), stroke, StrokeCap.Round)
     }
 }

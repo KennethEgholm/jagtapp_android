@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.dp
 import dk.jagtfokus.core.MoonPhase
 
 /**
@@ -23,11 +24,11 @@ fun MoonPhaseIcon(
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Canvas(modifier) {
-        val r = size.minDimension / 2f - 1f
+        val r = size.minDimension / 2f - 1.dp.toPx()
         val center = Offset(size.width / 2f, size.height / 2f)
         when (name) {
             MoonPhase.Name.Full -> drawCircle(tint, radius = r, center = center)
-            MoonPhase.Name.New -> drawCircle(tint, radius = r, center = center, style = Stroke(2f))
+            MoonPhase.Name.New -> drawCircle(tint, radius = r, center = center, style = Stroke(2.dp.toPx()))
             else -> {
                 // Lit fraction per phase: crescents 0.25, quarters 0.5, gibbous 0.75.
                 val lit = when (name) {
