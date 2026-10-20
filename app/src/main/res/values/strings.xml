@@ -252,6 +252,13 @@
     <string name="no_place">Intet sted</string>
     <string name="delete">Slet</string>
     <string name="entry_deleted">Posten er slettet.</string>
+    <string name="entry_removed">Slettet</string>
+    <string name="delete_entry">Slet %1$s</string>
+    <string name="remove_species">Fjern %1$s</string>
+    <string name="count_decrease">Formindsk antal</string>
+    <string name="count_increase">Forøg antal</string>
+    <string name="selection_on">Markeret</string>
+    <string name="selection_off">Ikke markeret</string>
     <string name="add_to_journal">Tilføj til journal</string>
     <string name="all_species_tab">Alle arter</string>
     <string name="all_species_info">Generelle jagttider i Danmark. Lokale tider kan afvige. Se dem under Jagtbart.</string>
@@ -307,6 +314,10 @@
     <plurals name="pieces">
         <item quantity="one">%d stykke</item>
         <item quantity="other">%d stykker</item>
+    </plurals>
+    <plurals name="piece_unit">
+        <item quantity="one">stykke</item>
+        <item quantity="other">stykker</item>
     </plurals>
     <plurals name="species_count">
         <item quantity="one">%d art</item>

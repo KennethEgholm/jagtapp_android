@@ -40,6 +40,8 @@ fun DatePlaceCard(
     onDate: () -> Unit,
     onPlace: () -> Unit,
     showLocationProblem: Boolean = true,
+    dateHint: String = stringResource(R.string.choose_another_day),
+    placeHint: String = stringResource(R.string.choose_another_place),
 ) {
     val dateValue = calendar.longDate(date).capitalizedFirst(calendar.locale)
     val dateDetail = if (date == today) stringResource(R.string.today) else null
@@ -57,7 +59,7 @@ fun DatePlaceCard(
                 title = stringResource(R.string.date),
                 value = dateValue,
                 detail = dateDetail,
-                hint = stringResource(R.string.choose_another_day),
+                hint = dateHint,
                 onClick = onDate,
             )
             QueryRow(
@@ -65,7 +67,7 @@ fun DatePlaceCard(
                 title = stringResource(R.string.place),
                 value = place.name,
                 detail = placeDetail,
-                hint = stringResource(R.string.choose_another_place),
+                hint = placeHint,
                 onClick = onPlace,
             )
             if (problem != null) {
