@@ -163,7 +163,7 @@ fun JagtbartScreen(
     val dataOffline = stringResource(R.string.data_offline)
     val dataHttp = stringResource(R.string.data_http)
     val recordSwipe: (String) -> Unit = { id ->
-        bag.recordAndSwitchTab(id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace, vm.locationState))
+        bag.record(id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace, vm.locationState))
         onSwitchToJournal()
     }
     val sections = vm.catalog.resolvedSections(vm.queryPlace)
@@ -219,7 +219,7 @@ fun JagtbartScreen(
                 photos = photos,
                 biology = biology,
                 onRecordInJournal = {
-                    bag.recordAndSwitchTab(item.id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace, vm.locationState))
+                    bag.record(item.id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace, vm.locationState))
                     onSwitchToJournal()
                 },
                 onBack = { route = JagtRoute.List },

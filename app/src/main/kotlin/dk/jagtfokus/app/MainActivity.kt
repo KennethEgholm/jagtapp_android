@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.Column
@@ -41,7 +41,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
@@ -167,18 +169,21 @@ class MainActivity : ComponentActivity() {
                     fun select(target: AppTab) {
                         if (target == tab) reselect++ else tab = target
                     }
-                    // A swipe on a species row records it and switches to the journal.
-                    LaunchedEffect(bag.tabRequests) {
-                        if (bag.tabRequests > 0) tab = AppTab.Journal
-                    }
+                    // Recording from a row or species page switches tab itself (onSwitchToJournal), once per tap.
+                    // No effect keyed on app-scoped state here: it would re-fire on every recreation.
                     // Registered before the screens, so a screen's own pushed page takes Back first.
                     BackHandler(tab != AppTab.Jagtbart) { tab = AppTab.Jagtbart }
-                    // The IME pad is on the whole column: the keyboard lifts the bar and the content together.
-                    Column(Modifier.fillMaxSize().imePadding()) {
+                    // The IME pad is on the content only: the keyboard covers the bar instead of lifting it.
+                    // The bar already fills part of the keyboard's height, so that part is not padded twice.
+                    var barHeightPx by remember { mutableIntStateOf(0) }
+                    val imeBottomPx = WindowInsets.ime.getBottom(LocalDensity.current)
+                    val imePad = with(LocalDensity.current) { (imeBottomPx - barHeightPx).coerceAtLeast(0).toDp() }
+                    Column(Modifier.fillMaxSize()) {
                         // The bar below pads for the navigation bar, so the screens must not do it twice.
                         Box(
                             Modifier
                                 .weight(1f)
+                                .padding(bottom = imePad)
                                 .consumeWindowInsets(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
                         ) {
                             // Each tab keeps its page, scroll and query while another tab is open.
@@ -199,7 +204,7 @@ class MainActivity : ComponentActivity() {
                             selectedTextColor = MaterialTheme.colorScheme.onSurface,
                             indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
                         )
-                        NavigationBar {
+                        NavigationBar(Modifier.onSizeChanged { barHeightPx = it.height }) {
                             NavigationBarItem(
                                 selected = tab == AppTab.Jagtbart,
                                 onClick = { select(AppTab.Jagtbart) },

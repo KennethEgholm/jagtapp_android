@@ -6,7 +6,7 @@ Produktet og den danske kopi følger iOS-appen i `../jagtapp`. Dette dokument er
 
 Ingen Navigation Compose. Hver fane har sin egen rute i `rememberSaveable` (kun id'er) og sin egen `SaveableStateHolder`, så rutevalg, søgning og rulleposition overlever fanevalg og rotation. Tilbage på en anden fane end Jagtbart går til Jagtbart; en skærms egen tilbage-handling går forud. Tryk på den åbne fane går tilbage til fanens rod og op til toppen. Ulempen er, at der ingen forudsigende tilbage-animation er mellem sider.
 
-Store topbjælker (`LargeTopAppBar`) på Journal, Alle arter, Indstillinger og Sol og vejr folder sig sammen ved rulning. Tastaturet løfter både bjælke og indhold (`imePadding`).
+Store topbjælker (`LargeTopAppBar`) på Journal, Alle arter, Indstillinger og Sol og vejr folder sig sammen ved rulning. Tastaturet løfter kun indholdet; navigationsbjælken bliver nederst, bag tastaturet (IME-padding på indholdet, fratrukket bjælkens højde).
 
 ## Systemet først
 
