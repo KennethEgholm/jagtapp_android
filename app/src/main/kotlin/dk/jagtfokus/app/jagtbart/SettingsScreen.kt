@@ -1,7 +1,18 @@
 package dk.jagtfokus.app.jagtbart
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import dk.jagtfokus.app.data.RemoteOutcome
+import dk.jagtfokus.app.ui.cardListItemColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -167,29 +178,49 @@ fun SettingsScreen(
                         headlineContent = { Text(stringResource(R.string.collapse_groups)) },
                         supportingContent = { Text(stringResource(R.string.collapse_groups_footer)) },
                         trailingContent = {
-                            Switch(checked = folding.collapse, onCheckedChange = folding::set)
+                            Switch(checked = folding.collapse, onCheckedChange = null)
                         },
+                        colors = cardListItemColors(),
+                        modifier = Modifier.toggleable(
+                            value = folding.collapse,
+                            role = Role.Switch,
+                            onValueChange = folding::set,
+                        ),
                     )
                 }
             }
             item { SectionHeader(stringResource(R.string.about_data)) }
             item {
                 SectionCard {
-                    Column(Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)) {
+                    Column(
+                        Modifier
+                            .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                            .semantics(mergeDescendants = true) {},
+                    ) {
                         Text(stringResource(R.string.source), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(vm.catalog.sourceName, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.updated)) },
                         trailingContent = { Text(updatedText(vm.catalog.updated, calendar)) },
+                        colors = cardListItemColors(),
                     )
+                    val check = vm.lastCheck
+                    if (check != null) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.about_data)) },
+                            supportingContent = { Text(stringResource(check.outcome.statusRes())) },
+                            colors = cardListItemColors(),
+                        )
+                    }
                     val sourceLink = vm.catalog.sourceLink
                     if (sourceLink != null) {
                         val uriHandler = LocalUriHandler.current
                         ListItem(
                             headlineContent = { Text(stringResource(R.string.open_regulation), color = MaterialTheme.colorScheme.primary) },
                             leadingContent = { Icon(Icons.Outlined.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                            modifier = Modifier.clickable {
+                            colors = cardListItemColors(),
+                            modifier = Modifier.clickable(role = Role.Button) {
                                 runCatching { uriHandler.openUri(sourceLink) }
                             },
                         )
@@ -204,11 +235,9 @@ fun SettingsScreen(
             }
             item {
                 SectionCard {
-                    Column {
-                        LabelRow(Icons.Outlined.WbTwilight, stringResource(R.string.daylight))
-                        LabelRow(Icons.Outlined.Map, stringResource(R.string.deer_note))
-                        LabelRow(Icons.Outlined.Eco, stringResource(R.string.biology_disclaimer))
-                    }
+                    LabelRow(Icons.Outlined.WbTwilight, stringResource(R.string.daylight))
+                    LabelRow(Icons.Outlined.Map, stringResource(R.string.deer_note))
+                    LabelRow(Icons.Outlined.Eco, stringResource(R.string.biology_disclaimer))
                 }
                 SectionFooter(stringResource(R.string.not_the_law))
             }
@@ -217,7 +246,8 @@ fun SettingsScreen(
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.schweiss_title)) },
                         leadingContent = { Icon(Icons.Outlined.Pets, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.clickable { showSchweiss = true },
+                        colors = cardListItemColors(),
+                        modifier = Modifier.clickable(role = Role.Button) { showSchweiss = true },
                     )
                 }
                 SectionFooter(stringResource(R.string.wounded_and_hit))
@@ -225,49 +255,61 @@ fun SettingsScreen(
             item { SectionHeader(stringResource(R.string.about_photos)) }
             item {
                 SectionCard {
-                    Column {
-                        LabelRow(Icons.Outlined.PhotoLibrary, stringResource(R.string.photos_from_commons))
-                        val uriHandler = LocalUriHandler.current
-                        ListItem(
-                            headlineContent = { Text(stringResource(R.string.open_commons), color = MaterialTheme.colorScheme.primary) },
-                            leadingContent = { Icon(Icons.Outlined.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                            modifier = Modifier.clickable {
-                                runCatching { uriHandler.openUri("https://commons.wikimedia.org") }
-                            },
-                        )
-                    }
+                    LabelRow(Icons.Outlined.PhotoLibrary, stringResource(R.string.photos_from_commons))
+                    val uriHandler = LocalUriHandler.current
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.open_commons), color = MaterialTheme.colorScheme.primary) },
+                        leadingContent = { Icon(Icons.Outlined.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        colors = cardListItemColors(),
+                        modifier = Modifier.clickable(role = Role.Button) {
+                            runCatching { uriHandler.openUri("https://commons.wikimedia.org") }
+                        },
+                    )
                 }
                 SectionFooter(stringResource(R.string.photos_licence))
             }
             item { SectionHeader(stringResource(R.string.about_privacy)) }
             item {
                 SectionCard {
-                    Column {
-                        LabelRow(Icons.Outlined.PersonOff, stringResource(R.string.no_account))
-                        LabelRow(Icons.Outlined.PanTool, stringResource(R.string.no_tracking))
-                        LabelRow(Icons.Outlined.LocationOn, stringResource(R.string.location_stays))
-                        LabelRow(Icons.Outlined.WifiOff, stringResource(R.string.works_offline))
-                    }
+                    LabelRow(Icons.Outlined.PersonOff, stringResource(R.string.no_account))
+                    LabelRow(Icons.Outlined.PanTool, stringResource(R.string.no_tracking))
+                    LabelRow(Icons.Outlined.LocationOn, stringResource(R.string.location_stays))
+                    LabelRow(Icons.Outlined.WifiOff, stringResource(R.string.works_offline))
                 }
             }
             item { SectionHeader(stringResource(R.string.about_this_app)) }
             item {
                 SectionCard {
-                    Column(Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s)) {
-                        Text("JagtFokus", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            stringResource(R.string.app_tagline),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Row(
+                        Modifier
+                            .padding(horizontal = Spacing.m, vertical = Spacing.s)
+                            .semantics(mergeDescendants = true) {},
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.brand_mark),
+                            contentDescription = null,
+                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(44.dp * 0.225f)),
                         )
+                        Column {
+                            Text("JagtFokus", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                stringResource(R.string.app_tagline),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.app_version)) },
                         trailingContent = { Text(versionText(context)) },
+                        colors = cardListItemColors(),
                     )
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.data_version)) },
                         trailingContent = { Text(stringResource(R.string.data_version_value, vm.catalog.version)) },
+                        colors = cardListItemColors(),
                     )
                 }
             }
@@ -281,7 +323,7 @@ private fun SectionHeader(text: String) {
         text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = Spacing.xs),
+        modifier = Modifier.padding(horizontal = Spacing.xs).semantics { heading() },
     )
 }
 
@@ -300,6 +342,7 @@ private fun LabelRow(icon: ImageVector, text: String) {
     ListItem(
         headlineContent = { Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         leadingContent = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+        colors = cardListItemColors(),
     )
 }
 
@@ -314,6 +357,14 @@ private fun versionText(context: android.content.Context): String {
     val info = context.packageManager.getPackageInfo(context.packageName, 0)
     val build = if (android.os.Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
     return "${info.versionName} ($build)"
+}
+
+private fun RemoteOutcome.statusRes(): Int = when (this) {
+    RemoteOutcome.Updated -> R.string.data_updated
+    RemoteOutcome.BuiltInNewer -> R.string.data_builtin_newer
+    RemoteOutcome.Broken -> R.string.data_broken
+    RemoteOutcome.Offline -> R.string.data_offline
+    RemoteOutcome.HttpFailed -> R.string.data_http
 }
 
 private fun Appearance.titleRes(): Int = when (this) {
