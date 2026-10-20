@@ -46,6 +46,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.lazy.rememberLazyListState
+import dk.jagtfokus.app.ui.ReselectEffect
+import kotlinx.coroutines.launch
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,12 +78,23 @@ fun SettingsScreen(
     vm: JagtbartViewModel,
     calendar: SeasonCalendar,
     appearance: Appearance,
+    reselect: Int = 0,
     onAppearance: (Appearance) -> Unit,
 ) {
     val context = LocalContext.current
     val folding = remember { GroupFolding(context.applicationContext) }
-    var showSchweiss by remember { mutableStateOf(false) }
+    var showSchweiss by rememberSaveable { mutableStateOf(false) }
     BackHandler(showSchweiss) { showSchweiss = false }
+    // Above the Schweiss page switch, so Back from it lands on the same scroll position.
+    val listState = rememberLazyListState()
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scope = rememberCoroutineScope()
+    ReselectEffect(reselect) {
+        val wasList = !showSchweiss
+        showSchweiss = false
+        scroll.state.heightOffset = 0f
+        scope.launch { if (wasList) listState.animateScrollToItem(0) else listState.scrollToItem(0) }
+    }
 
     if (showSchweiss) {
         Scaffold(
@@ -87,7 +104,7 @@ fun SettingsScreen(
                     title = { Text(stringResource(R.string.schweiss_title)) },
                     navigationIcon = {
                         IconButton(onClick = { showSchweiss = false }) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.close))
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
@@ -107,15 +124,18 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.settings_tab)) },
+                scrollBehavior = scroll,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(horizontal = Spacing.m, vertical = Spacing.s),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
             modifier = Modifier.fillMaxSize().padding(padding),

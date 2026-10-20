@@ -52,6 +52,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.foundation.lazy.rememberLazyListState
+import dk.jagtfokus.app.ui.ReselectEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -127,6 +131,7 @@ fun JagtbartScreen(
     bag: BagStore,
     onSwitchToJournal: () -> Unit,
     initialSheet: String? = null,
+    reselect: Int = 0,
 ) {
     val context = LocalContext.current
     val locale = appLocale()
@@ -153,7 +158,9 @@ fun JagtbartScreen(
     LaunchedEffect(initialSheet) {
         if (initialSheet == "schweiss") showSchweiss = true
     }
-    var route by remember { mutableStateOf<JagtRoute>(JagtRoute.List) }
+    var route by rememberSaveable(stateSaver = JagtRouteSaver) { mutableStateOf<JagtRoute>(JagtRoute.List) }
+    // Above the route switch, so Back from a page lands on the same scroll position.
+    val listState = rememberLazyListState()
     val folding = remember { GroupFolding(context.applicationContext) }
     val snackbar = androidx.compose.material3.SnackbarHostState()
     val scope = androidx.compose.runtime.rememberCoroutineScope()
@@ -173,6 +180,12 @@ fun JagtbartScreen(
         vm.loadWeather(point.first, point.second, vm.queryDate)
     }
     androidx.activity.compose.BackHandler(route != JagtRoute.List) { route = JagtRoute.List }
+    ReselectEffect(reselect) {
+        val wasList = route == JagtRoute.List
+        route = JagtRoute.List
+        scroll.state.heightOffset = 0f
+        scope.launch { if (wasList) listState.animateScrollToItem(0) else listState.scrollToItem(0) }
+    }
 
     if (route == JagtRoute.Weather) {
         WeatherScreen(
@@ -257,6 +270,7 @@ fun JagtbartScreen(
                 .padding(padding),
         ) {
             LazyColumn(
+                state = listState,
                 contentPadding = PaddingValues(horizontal = Spacing.m, vertical = Spacing.xs),
                 verticalArrangement = Arrangement.spacedBy(Spacing.l),
             ) {
@@ -764,6 +778,23 @@ private fun LocalBadge() {
         )
     }
 }
+
+private val JagtRouteSaver = Saver<JagtRoute, String>(
+    save = { route ->
+        when (route) {
+            JagtRoute.List -> "list"
+            JagtRoute.Weather -> "weather"
+            is JagtRoute.Species -> "species:${route.id}"
+        }
+    },
+    restore = { saved ->
+        when {
+            saved == "weather" -> JagtRoute.Weather
+            saved.startsWith("species:") -> JagtRoute.Species(saved.removePrefix("species:"))
+            else -> JagtRoute.List
+        }
+    },
+)
 
 private sealed interface JagtRoute {
     data object List : JagtRoute

@@ -11,11 +11,18 @@ import android.graphics.Color as AndroidColor
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -46,6 +53,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -148,20 +159,37 @@ class MainActivity : ComponentActivity() {
                     val locale = appLocale()
                     val calendar = remember(locale) { SeasonCalendar(locale = locale) }
                     ShellLifecycle(vm, bag)
-                    val tab = remember { androidx.compose.runtime.mutableStateOf(AppTab.Jagtbart) }
-                    // A swipe on a species row records it and switches to the journal.
-                    androidx.compose.runtime.LaunchedEffect(bag.tabRequests) {
-                        if (bag.tabRequests > 0) tab.value = AppTab.Journal
+                    var tab by rememberSaveable { mutableStateOf(AppTab.Jagtbart) }
+                    // Bumped when the open tab is tapped again; the screen pops to its root.
+                    var reselect by remember { mutableIntStateOf(0) }
+                    val tabStates = rememberSaveableStateHolder()
+                    fun select(target: AppTab) {
+                        if (target == tab) reselect++ else tab = target
                     }
-                    Column(Modifier.fillMaxSize()) {
-                        Box(Modifier.weight(1f)) {
-                            when (tab.value) {
-                                AppTab.Jagtbart -> JagtbartScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal }, initialSheet = sheet)
-                                AppTab.Journal -> JournalScreen(vm, bag, calendar)
-                                AppTab.AllSpecies -> AllSpeciesScreen(vm, biology, photos, bag, onSwitchToJournal = { tab.value = AppTab.Journal })
-                                AppTab.Settings -> SettingsScreen(vm, calendar, appearance) { option ->
-                                    appearance = option
-                                    prefs.edit().putString("udseende", option.name).apply()
+                    // A swipe on a species row records it and switches to the journal.
+                    LaunchedEffect(bag.tabRequests) {
+                        if (bag.tabRequests > 0) tab = AppTab.Journal
+                    }
+                    // Registered before the screens, so a screen's own pushed page takes Back first.
+                    BackHandler(tab != AppTab.Jagtbart) { tab = AppTab.Jagtbart }
+                    // The IME pad is on the whole column: the keyboard lifts the bar and the content together.
+                    Column(Modifier.fillMaxSize().imePadding()) {
+                        // The bar below pads for the navigation bar, so the screens must not do it twice.
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .consumeWindowInsets(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
+                        ) {
+                            // Each tab keeps its page, scroll and query while another tab is open.
+                            tabStates.SaveableStateProvider(tab.name) {
+                                when (tab) {
+                                    AppTab.Jagtbart -> JagtbartScreen(vm, biology, photos, bag, onSwitchToJournal = { tab = AppTab.Journal }, initialSheet = sheet, reselect = reselect)
+                                    AppTab.Journal -> JournalScreen(vm, bag, calendar, reselect)
+                                    AppTab.AllSpecies -> AllSpeciesScreen(vm, biology, photos, bag, onSwitchToJournal = { tab = AppTab.Journal }, reselect = reselect)
+                                    AppTab.Settings -> SettingsScreen(vm, calendar, appearance, reselect) { option ->
+                                        appearance = option
+                                        prefs.edit().putString("udseende", option.name).apply()
+                                    }
                                 }
                             }
                         }
@@ -172,29 +200,29 @@ class MainActivity : ComponentActivity() {
                         )
                         NavigationBar {
                             NavigationBarItem(
-                                selected = tab.value == AppTab.Jagtbart,
-                                onClick = { tab.value = AppTab.Jagtbart },
+                                selected = tab == AppTab.Jagtbart,
+                                onClick = { select(AppTab.Jagtbart) },
                                 icon = { Icon(Icons.Outlined.MyLocation, contentDescription = null) },
                                 label = { NavLabel(stringResource(R.string.tab_jagtbart)) },
                                 colors = navColors,
                             )
                             NavigationBarItem(
-                                selected = tab.value == AppTab.Journal,
-                                onClick = { tab.value = AppTab.Journal },
+                                selected = tab == AppTab.Journal,
+                                onClick = { select(AppTab.Journal) },
                                 icon = { Icon(Icons.Outlined.MenuBook, contentDescription = null) },
                                 label = { NavLabel(stringResource(R.string.journal_tab)) },
                                 colors = navColors,
                             )
                             NavigationBarItem(
-                                selected = tab.value == AppTab.AllSpecies,
-                                onClick = { tab.value = AppTab.AllSpecies },
+                                selected = tab == AppTab.AllSpecies,
+                                onClick = { select(AppTab.AllSpecies) },
                                 icon = { Icon(Icons.Outlined.FormatListBulleted, contentDescription = null) },
                                 label = { NavLabel(stringResource(R.string.all_species_tab)) },
                                 colors = navColors,
                             )
                             NavigationBarItem(
-                                selected = tab.value == AppTab.Settings,
-                                onClick = { tab.value = AppTab.Settings },
+                                selected = tab == AppTab.Settings,
+                                onClick = { select(AppTab.Settings) },
                                 icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
                                 label = { NavLabel(stringResource(R.string.settings_tab)) },
                                 colors = navColors,
