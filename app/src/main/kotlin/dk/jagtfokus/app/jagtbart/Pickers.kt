@@ -337,7 +337,7 @@ private fun PlaceRow(
 private fun SelectedMark() {
     Icon(
         Icons.Outlined.Check,
-        contentDescription = stringResource(R.string.selected),
+        contentDescription = stringResource(R.string.picker_selected),
         tint = MaterialTheme.colorScheme.primary,
     )
 }

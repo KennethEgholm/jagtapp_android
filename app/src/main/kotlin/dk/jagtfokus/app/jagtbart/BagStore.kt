@@ -1,6 +1,7 @@
 package dk.jagtfokus.app.jagtbart
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dk.jagtfokus.core.BagEntry
@@ -81,10 +82,10 @@ class BagStore(filesDir: File) {
     var pendingId by mutableStateOf<String?>(null)
         private set
     /** Bumped when a swipe action or species page records from another tab. */
-    var tabRequests by mutableStateOf(0)
+    var tabRequests by mutableIntStateOf(0)
         private set
     /** Bumped on every note and +1, so the screen can give haptic feedback. */
-    var saves by mutableStateOf(0)
+    var saves by mutableIntStateOf(0)
         private set
 
     val draft = BagDraft()

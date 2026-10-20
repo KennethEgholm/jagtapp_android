@@ -2,7 +2,6 @@ package dk.jagtfokus.app.jagtbart
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -32,6 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.core.net.toUri
 import dk.jagtfokus.app.R
 import dk.jagtfokus.app.ui.cardListItemColors
 import dk.jagtfokus.app.ui.theme.Spacing
@@ -182,9 +182,9 @@ private fun CallLink(title: String, url: String, label: String) {
 /** Dial and mail open their own apps; the web opens the browser. */
 private fun open(context: Context, url: String) {
     val intent = when {
-        url.startsWith("tel:") -> Intent(Intent.ACTION_DIAL, Uri.parse(url))
-        url.startsWith("mailto:") -> Intent(Intent.ACTION_SENDTO, Uri.parse(url))
-        else -> Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        url.startsWith("tel:") -> Intent(Intent.ACTION_DIAL, url.toUri())
+        url.startsWith("mailto:") -> Intent(Intent.ACTION_SENDTO, url.toUri())
+        else -> Intent(Intent.ACTION_VIEW, url.toUri())
     }
     runCatching { context.startActivity(intent) }
 }

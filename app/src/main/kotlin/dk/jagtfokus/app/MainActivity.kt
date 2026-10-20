@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color as AndroidColor
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
@@ -50,6 +49,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.compose.runtime.remember
@@ -118,7 +119,7 @@ class MainActivity : ComponentActivity() {
                     SystemBars(dark = true, background = BrandDeep)
                     Box(Modifier.fillMaxSize()) {
                         WelcomeScreen(onAccept = {
-                            prefs.edit().putBoolean("velkomst", true).apply()
+                            prefs.edit { putBoolean("velkomst", true) }
                             welcomed = true
                         })
                     }
@@ -188,7 +189,7 @@ class MainActivity : ComponentActivity() {
                                     AppTab.AllSpecies -> AllSpeciesScreen(vm, biology, photos, bag, onSwitchToJournal = { tab = AppTab.Journal }, reselect = reselect)
                                     AppTab.Settings -> SettingsScreen(vm, calendar, appearance, reselect) { option ->
                                         appearance = option
-                                        prefs.edit().putString("udseende", option.name).apply()
+                                        prefs.edit { putString("udseende", option.name) }
                                     }
                                 }
                             }
@@ -256,7 +257,7 @@ private fun SystemBars(dark: Boolean, background: Color) {
             SystemBarStyle.light(AndroidColor.TRANSPARENT, scrim)
         }
         activity.enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
-        activity.window.setBackgroundDrawable(ColorDrawable(background.toArgb()))
+        activity.window.setBackgroundDrawable(background.toArgb().toDrawable())
     }
 }
 
