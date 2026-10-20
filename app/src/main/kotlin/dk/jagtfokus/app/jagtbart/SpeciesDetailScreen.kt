@@ -1,34 +1,45 @@
 package dk.jagtfokus.app.jagtbart
 
-import android.content.Intent
-import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import dk.jagtfokus.app.R
 import dk.jagtfokus.app.ui.IconTile
+import dk.jagtfokus.app.ui.LabeledValueRow
+import dk.jagtfokus.app.ui.LinkRow
 import dk.jagtfokus.app.ui.SeasonBar
 import dk.jagtfokus.app.ui.theme.LocalSeasonColors
 import dk.jagtfokus.app.ui.theme.Spacing
@@ -63,10 +74,17 @@ fun SpeciesDetailScreen(
     // the general times only: no date, no place, no status. Like SpeciesContext.
     val periods = if (fromQuery) item.periods else item.generalPeriods
     val note = if (fromQuery) item.note else item.species.note
+    val listState = rememberLazyListState()
+    // The name is a heading in the content. It moves into the bar once it has scrolled away.
+    val headingGone by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     Scaffold(
         topBar = {
-            LargeTopAppBar(
-                title = { Text(item.name) },
+            TopAppBar(
+                title = {
+                    AnimatedVisibility(visible = headingGone, enter = fadeIn(), exit = fadeOut()) {
+                        Text(item.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -76,14 +94,21 @@ fun SpeciesDetailScreen(
             )
         },
     ) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-            if (groupTitle != null) {
-                item {
+        LazyColumn(Modifier.fillMaxSize().padding(padding), state = listState) {
+            item {
+                Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.xs)) {
+                    if (groupTitle != null) {
+                        Text(
+                            groupTitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     Text(
-                        groupTitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = Spacing.l),
+                        item.name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() },
                     )
                 }
             }
@@ -100,6 +125,7 @@ fun SpeciesDetailScreen(
             if (fromQuery && status != null && date != null) {
                 item {
                     ListItem(
+                        modifier = Modifier.semantics(mergeDescendants = true) {},
                         headlineContent = {
                             Text(
                                 if (status.isOpen) stringResource(R.string.huntable) else stringResource(R.string.not_huntable),
@@ -113,7 +139,7 @@ fun SpeciesDetailScreen(
                         },
                         leadingContent = {
                             Icon(
-                                Icons.Outlined.CheckCircle,
+                                if (status.isOpen) Icons.Outlined.CheckCircle else Icons.Outlined.Cancel,
                                 contentDescription = null,
                                 tint = if (status.isOpen) season.open else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -126,6 +152,7 @@ fun SpeciesDetailScreen(
                             stringResource(R.string.last_day),
                             calendar.longDate(end).capitalized(calendar.locale),
                             relative(status.daysLeft),
+                            closingSoon = status.isClosingSoon,
                         )
                         next != null && status.daysUntilOpening != null -> Fact(
                             stringResource(R.string.opens),
@@ -153,15 +180,14 @@ fun SpeciesDetailScreen(
                 }
             }
             item {
-                Text(
+                SectionHeading(
                     if (fromQuery) stringResource(R.string.season_in, placeName.orEmpty()) else stringResource(R.string.general_season),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
                 )
                 SeasonBar(
                     periods = periods,
                     marker = if (fromQuery) date?.let { calendar.monthDay(it) } else null,
                     modifier = Modifier.padding(horizontal = Spacing.l),
+                    showsMonths = true,
                 )
                 if (periods.isEmpty()) {
                     Text(
@@ -186,7 +212,7 @@ fun SpeciesDetailScreen(
             }
             if (fromQuery && item.isLocal) {
                 item {
-                    Text(stringResource(R.string.local_season), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
+                    SectionHeading(stringResource(R.string.local_season))
                     if (localPlaceName != null) Fact(stringResource(R.string.applies_to), localPlaceName, null)
                     Fact(stringResource(R.string.general_season), calendar.periodText(item.generalPeriods), null)
                     Text(stringResource(R.string.here_footer), Modifier.padding(Spacing.l), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -194,7 +220,7 @@ fun SpeciesDetailScreen(
             }
             if (!note.isNullOrBlank()) {
                 item {
-                    Text(stringResource(R.string.note), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
+                    SectionHeading(stringResource(R.string.note))
                     Text(note, Modifier.padding(horizontal = Spacing.l))
                 }
             }
@@ -212,18 +238,8 @@ fun SpeciesDetailScreen(
             }
             if (sourceUrl != null) {
                 item {
-                    val context = LocalContext.current
-                    Text(stringResource(R.string.source), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s))
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.open_regulation), color = MaterialTheme.colorScheme.primary) },
-                        leadingContent = { Icon(Icons.Outlined.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        modifier = Modifier.padding(bottom = Spacing.xs),
-                    )
-                    // The list item above is not clickable by itself. Use a button row.
-                    androidx.compose.material3.TextButton(
-                        onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(sourceUrl))) },
-                        modifier = Modifier.padding(horizontal = Spacing.m),
-                    ) { Text(stringResource(R.string.open_regulation)) }
+                    SectionHeading(stringResource(R.string.source))
+                    LinkRow(stringResource(R.string.open_regulation), sourceUrl)
                     Text(stringResource(R.string.not_the_law), Modifier.padding(Spacing.l), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -232,15 +248,24 @@ fun SpeciesDetailScreen(
 }
 
 @Composable
-private fun Fact(title: String, value: String, detail: String?) {
-    ListItem(
-        headlineContent = { Text(title, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-        trailingContent = {
-            androidx.compose.foundation.layout.Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
-                Text(value)
-                if (detail != null) Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        },
+private fun SectionHeading(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s).semantics { heading() },
+    )
+}
+
+/** The relative day in amber when the season is about to close. The words carry the meaning too. */
+@Composable
+private fun Fact(title: String, value: String, detail: String?, closingSoon: Boolean = false) {
+    LabeledValueRow(
+        label = title,
+        value = value,
+        note = detail,
+        noteColor = if (closingSoon) LocalSeasonColors.current.closingSoon else MaterialTheme.colorScheme.onSurfaceVariant,
+        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        valueStyle = MaterialTheme.typography.bodyLarge,
     )
 }
 
@@ -249,7 +274,7 @@ private fun relative(days: Int?): String = when (days) {
     null -> ""
     0 -> stringResource(R.string.today_lower)
     1 -> stringResource(R.string.tomorrow_lower)
-    else -> stringResource(R.string.in_days, days)
+    else -> pluralStringResource(R.plurals.in_days, days, days)
 }
 
 private fun String.capitalized(locale: Locale): String =

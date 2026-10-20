@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
@@ -79,10 +80,11 @@ private fun PhotoCredit(photo: IdentifiedPhoto) {
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .padding(top = Spacing.xs, bottom = Spacing.xxs, start = Spacing.xxs)
+            .minimumInteractiveComponentSize()
             .clickable {
                 runCatching { uriHandler.openUri(photo.photo.sourceURL) }
             }
+            .padding(top = Spacing.xs, bottom = Spacing.xxs, start = Spacing.xxs)
             .semantics {
                 contentDescription = "$credit. $open"
             },
