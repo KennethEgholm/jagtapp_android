@@ -173,7 +173,7 @@ private fun groupByMonth(rows: List<BagEntry>, calendar: SeasonCalendar): List<M
     return order.map { key ->
         val list = grouped[key].orEmpty()
         val title = calendar.monthYear(list.firstOrNull()?.date ?: key).orEmpty()
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(calendar.locale) else it.toString() }
         MonthGroup(key, title, list)
     }
 }
@@ -287,7 +287,7 @@ fun BagEditScreen(vm: JagtbartViewModel, bag: BagStore, calendar: SeasonCalendar
                         QueryRow(
                             icon = Icons.Outlined.Assignment,
                             title = stringResource(R.string.date),
-                            value = calendar.fullWithYear(date).capitalized(),
+                            value = calendar.fullWithYear(date).capitalized(calendar.locale),
                             detail = null,
                             hint = stringResource(R.string.choose_another_day),
                             onClick = { showDate = true },
@@ -366,8 +366,8 @@ private fun CountStepper(count: Int, onChange: (Int) -> Unit) {
     }
 }
 
-private fun String.capitalized(): String =
-    replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
+private fun String.capitalized(locale: java.util.Locale): String =
+    replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 
 /**
  * Species taken at least once. Not the year's bag, and not a count.

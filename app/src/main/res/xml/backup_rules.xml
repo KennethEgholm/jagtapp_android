@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 11 and older. Backup stays on so the journal survives a phone change, like iCloud on iOS.
+  Only the journal files and the preferences are listed. The downloaded jagttider.json cache and
+  *.corrupt.json are left out: the first is fetched again, the second is a local rescue copy.
+-->
+<full-backup-content>
+    <include domain="file" path="vildtudbytte.json" />
+    <include domain="file" path="vildtudbytte.backup.json" />
+    <include domain="file" path="artsliste.json" />
+    <include domain="file" path="artsliste.backup.json" />
+    <include domain="sharedpref" path="jagtapp.xml" />
+</full-backup-content>

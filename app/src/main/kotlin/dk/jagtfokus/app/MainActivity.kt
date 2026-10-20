@@ -1,6 +1,17 @@
 package dk.jagtfokus.app
 
+import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.graphics.Color as AndroidColor
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,10 +29,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -29,7 +52,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dk.jagtfokus.app.data.CatalogRepository
 import dk.jagtfokus.app.data.WeatherClient
 import dk.jagtfokus.app.data.loadBiology
-import dk.jagtfokus.app.data.loadCatalog
 import dk.jagtfokus.app.data.loadSpeciesPhotos
 import dk.jagtfokus.app.location.AndroidLocationSource
 import dk.jagtfokus.app.jagtbart.AllSpeciesScreen
@@ -40,7 +62,11 @@ import dk.jagtfokus.app.jagtbart.BagStore
 import dk.jagtfokus.app.jagtbart.JagtbartScreen
 import dk.jagtfokus.app.jagtbart.JagtbartViewModel
 import dk.jagtfokus.app.jagtbart.JournalScreen
+import dk.jagtfokus.app.jagtbart.LocationState
+import dk.jagtfokus.app.ui.appLocale
+import dk.jagtfokus.core.SeasonCalendar
 import dk.jagtfokus.app.ui.theme.Appearance
+import dk.jagtfokus.app.ui.theme.BrandDeep
 import dk.jagtfokus.app.ui.theme.JagtFokusTheme
 import dk.jagtfokus.app.ui.theme.Spacing
 import java.io.File
@@ -51,20 +77,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val catalog = runCatching { loadCatalog(this) }.getOrNull()
+        // Bundled file, or the downloaded one when it is newer. Never the bundled one alone.
+        val catalog = runCatching { CatalogRepository(applicationContext).load() }.getOrNull()
         val biology = runCatching { loadBiology(this) }.getOrNull()
         val photos = runCatching { loadSpeciesPhotos(this) }.getOrNull()
-        val date = intent.getStringExtra("date")?.let {
-            try {
-                LocalDate.parse(it)
-            } catch (_: DateTimeParseException) {
-                null
+        // Same idea as the iOS launch arguments (`#if DEBUG` there): date, place and sheet. Debug builds only.
+        val debuggable = applicationContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val date = if (debuggable) {
+            intent.getStringExtra("date")?.let {
+                try {
+                    LocalDate.parse(it)
+                } catch (_: DateTimeParseException) {
+                    null
+                }
             }
+        } else {
+            null
         }
-        val placeId = intent.getStringExtra("place")
-        // Same idea as the iOS launch arguments: `-sheet schweiss` opens the sheet. Debug only.
-        val debuggable = applicationContext.applicationInfo.flags and
-            android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val placeId = if (debuggable) intent.getStringExtra("place") else null
         val sheet = if (debuggable) intent.getStringExtra("sheet") else null
         setContent {
             val prefs = getSharedPreferences("jagtapp", android.content.Context.MODE_PRIVATE)
@@ -73,6 +103,8 @@ class MainActivity : ComponentActivity() {
             }
             if (!welcomed) {
                 JagtFokusTheme(darkTheme = true) {
+                    // Dark brand world: light icons whatever the system or Udseende says.
+                    SystemBars(dark = true, background = BrandDeep)
                     Box(Modifier.fillMaxSize()) {
                         WelcomeScreen(onAccept = {
                             prefs.edit().putBoolean("velkomst", true).apply()
@@ -93,6 +125,7 @@ class MainActivity : ComponentActivity() {
                 Appearance.DARK -> true
             }
             JagtFokusTheme(darkTheme = darkTheme) {
+                SystemBars(dark = darkTheme, background = MaterialTheme.colorScheme.background)
                 if (catalog == null) {
                     Box(Modifier.fillMaxSize().padding(Spacing.l), contentAlignment = Alignment.Center) {
                         Text(
@@ -101,7 +134,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 } else {
-                    val bag = remember { BagStore(applicationContext.filesDir) }
+                    val bag = (applicationContext as JagtFokusApp).bag
                     val vm = viewModel {
                         JagtbartViewModel(
                             catalog = catalog,
@@ -112,7 +145,9 @@ class MainActivity : ComponentActivity() {
                             initialPlaceId = placeId,
                         )
                     }
-                    val calendar = remember { dk.jagtfokus.core.SeasonCalendar() }
+                    val locale = appLocale()
+                    val calendar = remember(locale) { SeasonCalendar(locale = locale) }
+                    ShellLifecycle(vm, bag)
                     val tab = remember { androidx.compose.runtime.mutableStateOf(AppTab.Jagtbart) }
                     // A swipe on a species row records it and switches to the journal.
                     androidx.compose.runtime.LaunchedEffect(bag.tabRequests) {
@@ -130,35 +165,107 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                        val navColors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                        )
                         NavigationBar {
                             NavigationBarItem(
                                 selected = tab.value == AppTab.Jagtbart,
                                 onClick = { tab.value = AppTab.Jagtbart },
                                 icon = { Icon(Icons.Outlined.MyLocation, contentDescription = null) },
-                                label = { Text(stringResource(R.string.tab_jagtbart)) },
+                                label = { NavLabel(stringResource(R.string.tab_jagtbart)) },
+                                colors = navColors,
                             )
                             NavigationBarItem(
                                 selected = tab.value == AppTab.Journal,
                                 onClick = { tab.value = AppTab.Journal },
                                 icon = { Icon(Icons.Outlined.MenuBook, contentDescription = null) },
-                                label = { Text(stringResource(R.string.journal_tab)) },
+                                label = { NavLabel(stringResource(R.string.journal_tab)) },
+                                colors = navColors,
                             )
                             NavigationBarItem(
                                 selected = tab.value == AppTab.AllSpecies,
                                 onClick = { tab.value = AppTab.AllSpecies },
                                 icon = { Icon(Icons.Outlined.FormatListBulleted, contentDescription = null) },
-                                label = { Text(stringResource(R.string.all_species_tab)) },
+                                label = { NavLabel(stringResource(R.string.all_species_tab)) },
+                                colors = navColors,
                             )
                             NavigationBarItem(
                                 selected = tab.value == AppTab.Settings,
                                 onClick = { tab.value = AppTab.Settings },
                                 icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                                label = { Text(stringResource(R.string.settings_tab)) },
+                                label = { NavLabel(stringResource(R.string.settings_tab)) },
+                                colors = navColors,
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** One line, never broken mid-word, even at 200 % font. The icon carries no description: the label is read. */
+@Composable
+private fun NavLabel(text: String) {
+    Text(text, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+}
+
+/**
+ * System bars follow the app's Udseende, not the phone's: [dark] means the app is dark, so the
+ * icons are light. Also tints the window behind the first frame and rotation.
+ */
+@Composable
+private fun SystemBars(dark: Boolean, background: Color) {
+    val activity = LocalActivity.current as? ComponentActivity ?: return
+    val scrim = AndroidColor.argb(0x80, 0x1b, 0x1b, 0x1b)
+    SideEffect {
+        val bars = if (dark) {
+            SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(AndroidColor.TRANSPARENT, scrim)
+        }
+        activity.enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
+        activity.window.setBackgroundDrawable(ColorDrawable(background.toArgb()))
+    }
+}
+
+/**
+ * Runs whatever tab is open (iOS `RootView`): the start-up catalog check, a fresh "today" and
+ * a fresh position on resume, and a fresh "today" when the clock, date or zone changes.
+ */
+@Composable
+private fun ShellLifecycle(vm: JagtbartViewModel, bag: BagStore) {
+    val context = LocalContext.current
+    val locale by rememberUpdatedState(appLocale())
+
+    LaunchedEffect(vm) { vm.checkCatalogSilently() }
+
+    LifecycleResumeEffect(vm) {
+        vm.onResume()
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            if (vm.followHere || bag.draft.followHere) vm.locate(locale)
+        } else if (vm.locationState != LocationState.Idle) {
+            // Switched off in Settings meanwhile. Idle is the first start, before the dialog.
+            vm.onDenied()
+        }
+        onPauseOrDispose {}
+    }
+
+    LifecycleStartEffect(vm) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) = vm.onResume()
+        }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_DATE_CHANGED)
+            addAction(Intent.ACTION_TIME_CHANGED)
+            addAction(Intent.ACTION_TIMEZONE_CHANGED)
+        }
+        ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        onStopOrDispose { context.unregisterReceiver(receiver) }
     }
 }

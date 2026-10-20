@@ -33,7 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import dk.jagtfokus.app.ui.appLocale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -70,7 +70,7 @@ fun AllSpeciesScreen(
     onSwitchToJournal: () -> Unit,
 ) {
     val context = LocalContext.current
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = appLocale()
     val calendar = remember(locale) { SeasonCalendar(locale = locale) }
     val folding = remember { GroupFolding(context.applicationContext) }
     var query by remember { mutableStateOf("") }

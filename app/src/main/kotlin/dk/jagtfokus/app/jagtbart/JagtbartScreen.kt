@@ -59,7 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
+import dk.jagtfokus.app.ui.appLocale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
@@ -129,16 +129,8 @@ fun JagtbartScreen(
     initialSheet: String? = null,
 ) {
     val context = LocalContext.current
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = appLocale()
     val calendar = remember(locale) { SeasonCalendar(locale = locale) }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) vm.onResume()
-        }
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer) }
-    }
 
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) vm.locate(locale) else vm.onDenied()
@@ -858,7 +850,7 @@ private fun SunCard(
 /** "Maks 11,9° · Min 9,1° · 0,3 mm", or what of it MET has. */
 @Composable
 private fun SunSkyLine(weather: dk.jagtfokus.core.MetDay) {
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = appLocale()
     val parts = buildList {
         val max = weather.maxTemperature
         val min = weather.minTemperature

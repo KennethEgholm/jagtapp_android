@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">JagtFokus</string>
+    <string name="locale_tag" translatable="false">da</string>
     <string name="tab_jagtbart">Jagtbart</string>
     <string name="headline">Jagtbart vildt efter tid og sted</string>
     <string name="date">Dato</string>

@@ -18,6 +18,7 @@ import dk.jagtfokus.core.place
 import dk.jagtfokus.app.location.AndroidLocationSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.util.Locale
 
@@ -30,6 +31,12 @@ enum class LocationState {
     Denied,
     Unavailable,
 }
+
+/**
+ * The last time the remote catalog was asked, and what came of it. iOS keeps only the
+ * outcome text (`remoteStatus`); [at] lets Indstillinger say when.
+ */
+data class CatalogCheck(val outcome: RemoteOutcome, val at: Instant)
 
 /**
  * Date and place for Jagtbart. The list itself is computed by [SeasonCalendar]
@@ -75,6 +82,13 @@ class JagtbartViewModel(
     var weatherUi by mutableStateOf(WeatherUi.Idle)
         private set
 
+    /**
+     * Result of the latest remote catalog check, from the silent check at start or from pull
+     * to refresh. Null until the first check has finished. Shown in Indstillinger as "Data".
+     */
+    var lastCheck by mutableStateOf<CatalogCheck?>(null)
+        private set
+
     val queryDate: LocalDate
         get() = if (followToday) now else pickedDate
 
@@ -86,6 +100,7 @@ class JagtbartViewModel(
         }
 
     private var locateJob: Job? = null
+    private var silentCheckStarted = false
 
     fun onResume() {
         now = LocalDate.now(SeasonCalendar.ZONE)
@@ -168,18 +183,34 @@ class JagtbartViewModel(
         }
     }
 
+    /**
+     * Asks the remote catalog once per process, without spinner or snackbar. iOS does the same
+     * in `SeasonStore.init`. [lastCheck] records the outcome.
+     */
+    fun checkCatalogSilently() {
+        if (silentCheckStarted) return
+        silentCheckStarted = true
+        viewModelScope.launch { fetchCatalog() }
+    }
+
     /** Pull to refresh the catalog. Location is requested by the screen when it is allowed. */
     fun refreshCatalog(onOutcome: (RemoteOutcome) -> Unit) {
         refreshing = true
         viewModelScope.launch {
-            val (outcome, next) = catalogs.refresh(catalog)
-            if (outcome == RemoteOutcome.Updated) {
-                catalog = next
-                pickedPlace = catalog.place(pickedPlace.id) ?: catalog.denmark
-                if (gpsNames.isNotEmpty()) gpsPlace = catalog.matchPlace(gpsNames)
-            }
+            val outcome = fetchCatalog()
             refreshing = false
             onOutcome(outcome)
         }
+    }
+
+    private suspend fun fetchCatalog(): RemoteOutcome {
+        val (outcome, next) = catalogs.refresh(catalog)
+        if (outcome == RemoteOutcome.Updated) {
+            catalog = next
+            pickedPlace = catalog.place(pickedPlace.id) ?: catalog.denmark
+            if (gpsNames.isNotEmpty()) gpsPlace = catalog.matchPlace(gpsNames)
+        }
+        lastCheck = CatalogCheck(outcome, Instant.now())
+        return outcome
     }
 }
