@@ -62,6 +62,12 @@
     <string name="lit">%1$s lit</string>
     <string name="basis">%1$s, %2$s</string>
     <string name="open_sun">Open sun and weather for the day</string>
+    <string name="sun_spoken">Sunrise %1$s, sunset %2$s. %3$s</string>
+    <string name="spoken_max_min">Max %1$s°, min %2$s°.</string>
+    <string name="spoken_precipitation">Precipitation %1$s mm.</string>
+    <string name="spoken_wind_up_to">Wind up to %1$s m/s.</string>
+    <string name="spoken_wind_up_to_from">Wind up to %1$s m/s from %2$s.</string>
+    <string name="spoken_moon">%1$s, %2$s lit.</string>
     <string name="weather">Weather</string>
     <string name="temperature">Temperature</string>
     <string name="precipitation">Precipitation</string>

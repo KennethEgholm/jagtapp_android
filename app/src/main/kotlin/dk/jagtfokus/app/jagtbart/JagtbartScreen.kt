@@ -1,10 +1,7 @@
 package dk.jagtfokus.app.jagtbart
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -14,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -24,17 +20,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bedtime
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.Air
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.MyLocation
-import androidx.compose.material.icons.outlined.Park
-import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.outlined.Water
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -45,23 +33,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.foundation.lazy.rememberLazyListState
 import dk.jagtfokus.app.ui.ReselectEffect
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import dk.jagtfokus.app.ui.appLocale
 import androidx.compose.ui.platform.LocalContext
@@ -72,23 +55,29 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dk.jagtfokus.app.R
-import dk.jagtfokus.app.location.AndroidLocationSource
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material.icons.outlined.AddCircle
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
+import dk.jagtfokus.app.data.RemoteOutcome
+import dk.jagtfokus.app.ui.DatePlaceCard
+import dk.jagtfokus.app.ui.GroupCard
+import dk.jagtfokus.app.ui.GroupSketch
+import dk.jagtfokus.app.ui.MissingSpecies
+import dk.jagtfokus.app.ui.SpeciesContext
+import dk.jagtfokus.app.ui.SpeciesRow
+import dk.jagtfokus.app.ui.moonWords
+import dk.jagtfokus.app.ui.weatherWords
 import dk.jagtfokus.app.ui.IconTile
 import dk.jagtfokus.app.ui.MoonPhaseIcon
-import dk.jagtfokus.app.ui.QueryRow
 import dk.jagtfokus.app.ui.SectionCard
-import dk.jagtfokus.app.ui.capitalizedFirst
 import dk.jagtfokus.app.ui.SunEventIcon
 import dk.jagtfokus.app.ui.decimal
 import dk.jagtfokus.app.ui.groupTitle
@@ -101,7 +90,6 @@ import dk.jagtfokus.app.ui.theme.Radius
 import dk.jagtfokus.app.ui.theme.Sun
 import dk.jagtfokus.app.ui.theme.Spacing
 import kotlinx.coroutines.launch
-import dk.jagtfokus.core.HuntingCatalog
 import dk.jagtfokus.core.BiologyCatalog
 import dk.jagtfokus.core.Place
 import dk.jagtfokus.core.ResolvedGroup
@@ -120,7 +108,6 @@ import dk.jagtfokus.core.closingSoonCount
 import dk.jagtfokus.core.openGroups
 import dk.jagtfokus.core.resolvedSections
 import java.time.LocalDate
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,9 +132,14 @@ fun JagtbartScreen(
         Manifest.permission.ACCESS_COARSE_LOCATION,
     ) == PackageManager.PERMISSION_GRANTED
 
+    // The system dialog comes once per session. Back on the tab, a denial is shown in the card.
     LaunchedEffect(vm.followHere) {
         if (!vm.followHere) return@LaunchedEffect
-        if (hasPermission()) vm.locate(locale) else permission.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (hasPermission()) {
+            vm.locate(locale)
+        } else if (vm.claimPermissionPrompt()) {
+            permission.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
     }
 
     var showDate by remember { mutableStateOf(false) }
@@ -162,8 +154,14 @@ fun JagtbartScreen(
     // Above the route switch, so Back from a page lands on the same scroll position.
     val listState = rememberLazyListState()
     val folding = remember { GroupFolding(context.applicationContext) }
-    val snackbar = androidx.compose.material3.SnackbarHostState()
-    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    // Resolved here, in composition, so a language change reaches the snackbar too.
+    val dataUpdated = stringResource(R.string.data_updated)
+    val dataBuiltInNewer = stringResource(R.string.data_builtin_newer)
+    val dataBroken = stringResource(R.string.data_broken)
+    val dataOffline = stringResource(R.string.data_offline)
+    val dataHttp = stringResource(R.string.data_http)
     val recordSwipe: (String) -> Unit = { id ->
         bag.recordAndSwitchTab(id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace))
         onSwitchToJournal()
@@ -179,7 +177,7 @@ fun JagtbartScreen(
         val point = coordinate ?: return@LaunchedEffect
         vm.loadWeather(point.first, point.second, vm.queryDate)
     }
-    androidx.activity.compose.BackHandler(route != JagtRoute.List) { route = JagtRoute.List }
+    BackHandler(route != JagtRoute.List) { route = JagtRoute.List }
     ReselectEffect(reselect) {
         val wasList = route == JagtRoute.List
         route = JagtRoute.List
@@ -205,7 +203,7 @@ fun JagtbartScreen(
         val id = (route as JagtRoute.Species).id
         val item = vm.catalog.resolvedSections(vm.queryPlace).flatMap { it.species }.firstOrNull { it.id == id }
         if (item == null) {
-            Text(stringResource(R.string.species_missing), Modifier.padding(Spacing.l))
+            MissingSpecies { route = JagtRoute.List }
         } else {
             val group = vm.catalog.groups.firstOrNull { group -> group.species.any { it.id == id } }
             SpeciesDetailScreen(
@@ -242,25 +240,32 @@ fun JagtbartScreen(
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
                 actions = {
-                    androidx.compose.material3.TextButton(onClick = { showSchweiss = true }) {
+                    // Label colour, not green: green means status (iOS `.tint(.primary)`).
+                    val open = stringResource(R.string.schweiss_open)
+                    TextButton(
+                        onClick = { showSchweiss = true },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier.semantics { onClick(label = open, action = null) },
+                    ) {
                         Text(stringResource(R.string.schweiss_toolbar))
                     }
                 },
             )
         },
-        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
+        snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = vm.refreshing,
             onRefresh = {
                 if (hasPermission()) vm.locate(locale) else vm.onDenied()
+                vm.reloadWeather()
                 vm.refreshCatalog { outcome ->
                     val text = when (outcome) {
-                        dk.jagtfokus.app.data.RemoteOutcome.Updated -> context.getString(R.string.data_updated)
-                        dk.jagtfokus.app.data.RemoteOutcome.BuiltInNewer -> context.getString(R.string.data_builtin_newer)
-                        dk.jagtfokus.app.data.RemoteOutcome.Broken -> context.getString(R.string.data_broken)
-                        dk.jagtfokus.app.data.RemoteOutcome.Offline -> context.getString(R.string.data_offline)
-                        dk.jagtfokus.app.data.RemoteOutcome.HttpFailed -> context.getString(R.string.data_http)
+                        RemoteOutcome.Updated -> dataUpdated
+                        RemoteOutcome.BuiltInNewer -> dataBuiltInNewer
+                        RemoteOutcome.Broken -> dataBroken
+                        RemoteOutcome.Offline -> dataOffline
+                        RemoteOutcome.HttpFailed -> dataHttp
                     }
                     scope.launch { snackbar.showSnackbar(text) }
                 }
@@ -298,7 +303,10 @@ fun JagtbartScreen(
                             date = vm.queryDate,
                             weather = if (vm.weatherUi == WeatherUi.Loaded) vm.weather else null,
                             moon = calendar.moonPhase(vm.queryDate),
-                            onClick = { route = JagtRoute.Weather },
+                            onClick = {
+                                vm.reloadWeather()
+                                route = JagtRoute.Weather
+                            },
                         )
                     }
                 }
@@ -317,7 +325,7 @@ fun JagtbartScreen(
                 items(open.size, key = { open[it].id }) { index ->
                     val group = open[index]
                     val soon = calendar.closingSoonCount(listOf(group), vm.queryDate)
-                    GroupCard(
+                    OpenGroupCard(
                         calendar = calendar,
                         group = group,
                         expanded = !folding.collapse || group.id in vm.expanded,
@@ -387,91 +395,10 @@ private fun Headline() {
     Text(
         stringResource(R.string.headline),
         style = MaterialTheme.typography.headlineSmall,
-        modifier = Modifier.padding(horizontal = Spacing.xs),
+        modifier = Modifier
+            .padding(horizontal = Spacing.xs)
+            .semantics { heading() },
     )
-}
-
-@Composable
-private fun DatePlaceCard(
-    calendar: SeasonCalendar,
-    date: LocalDate,
-    today: LocalDate,
-    place: Place,
-    followHere: Boolean,
-    locationState: LocationState,
-    gpsPlace: Place?,
-    onDate: () -> Unit,
-    onPlace: () -> Unit,
-) {
-    val dateValue = calendar.longDate(date).capitalizedFirst(calendar.locale)
-    val dateDetail = if (date == today) stringResource(R.string.today) else null
-    val placeDetail = when {
-        !followHere -> null
-        locationState == LocationState.Locating -> stringResource(R.string.finding_position)
-        locationState == LocationState.Found -> stringResource(R.string.your_position)
-        else -> null
-    }
-    val problem = locationProblem(followHere, locationState, gpsPlace, place)
-    SectionCard {
-        Column {
-            QueryRow(
-                icon = Icons.Outlined.CalendarMonth,
-                title = stringResource(R.string.date),
-                value = dateValue,
-                detail = dateDetail,
-                hint = stringResource(R.string.choose_another_day),
-                onClick = onDate,
-            )
-            QueryRow(
-                icon = if (followHere) Icons.Outlined.MyLocation else Icons.Outlined.Place,
-                title = stringResource(R.string.place),
-                value = place.name,
-                detail = placeDetail,
-                hint = stringResource(R.string.choose_another_place),
-                onClick = onPlace,
-            )
-            if (problem != null) {
-                Column(Modifier.padding(horizontal = Spacing.m, vertical = Spacing.xs)) {
-                    Text(
-                        problem,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (locationState == LocationState.Denied) {
-                        val context = LocalContext.current
-                        TextButton(onClick = {
-                            val intent = Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                Uri.fromParts("package", context.packageName, null),
-                            )
-                            context.startActivity(intent)
-                        }) {
-                            Text(stringResource(R.string.open_settings))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun locationProblem(
-    followHere: Boolean,
-    state: LocationState,
-    gpsPlace: Place?,
-    shown: Place,
-): String? {
-    if (!followHere) return null
-    return when (state) {
-        LocationState.Denied -> stringResource(R.string.location_denied)
-        LocationState.Unavailable -> if (gpsPlace != null && gpsPlace.id == shown.id) {
-            stringResource(R.string.location_stale, gpsPlace.name)
-        } else {
-            stringResource(R.string.location_unavailable)
-        }
-        else -> null
-    }
 }
 
 @Composable
@@ -536,7 +463,7 @@ private fun AnswerCard(
 }
 
 @Composable
-private fun GroupCard(
+private fun OpenGroupCard(
     calendar: SeasonCalendar,
     group: ResolvedGroup,
     expanded: Boolean,
@@ -547,65 +474,17 @@ private fun GroupCard(
     onToggle: () -> Unit,
     onSpecies: (String) -> Unit,
 ) {
-    val title = groupTitle(group.id, group.title)
-    val state = if (expanded) stringResource(R.string.shown) else stringResource(R.string.hidden)
-    val hint = stringResource(R.string.show_species)
-    val soonText = if (closingSoon > 0) {
-        pluralStringResource(R.plurals.closing_soon, closingSoon, closingSoon)
-    } else {
-        null
-    }
-    SectionCard {
-        Column {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-                    .then(if (canFold) Modifier.clickable(onClick = onToggle) else Modifier)
-                    .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                    .semantics {
-                        contentDescription = listOfNotNull(title, group.species.size.toString(), soonText, state, hint)
-                            .joinToString(". ")
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-            ) {
-                dk.jagtfokus.app.ui.GroupSketch(group.id, Modifier.size(28.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleMedium)
-                    if (closingSoon > 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                            Icon(
-                                Icons.Outlined.HourglassTop,
-                                contentDescription = null,
-                                tint = LocalSeasonColors.current.closingSoon,
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Text(
-                                soonText.orEmpty(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = LocalSeasonColors.current.closingSoon,
-                            )
-                        }
-                    }
-                }
-                Text(
-                    group.species.size.toString(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (canFold) {
-                    Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null)
-                }
-            }
-            if (expanded) {
-                group.species.forEach { item ->
-                    BagSwipe({ onSwipeRecord(item.id) }) {
-                        SpeciesRow(item, calendar.status(item.periods, date), calendar) { onSpecies(item.id) }
-                    }
-                }
-            }
-        }
+    GroupCard(
+        title = groupTitle(group.id, group.title),
+        count = group.species.size,
+        leading = { GroupSketch(group.id, Modifier.size(28.dp)) },
+        expanded = expanded,
+        canFold = canFold,
+        foldHint = stringResource(R.string.show_species),
+        onToggle = onToggle,
+        closingSoon = closingSoon,
+    ) {
+        QueryRows(calendar, group.species, date, onSwipeRecord, onSpecies)
     }
 }
 
@@ -620,162 +499,41 @@ private fun ClosedCard(
     onToggle: () -> Unit,
     onSpecies: (String) -> Unit,
 ) {
-    val title = stringResource(R.string.not_open_here)
-    val shown = stringResource(R.string.shown)
-    val hidden = stringResource(R.string.hidden)
-    SectionCard {
-        Column {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-                    .then(if (canFold) Modifier.clickable(onClick = onToggle) else Modifier)
-                    .padding(horizontal = Spacing.m, vertical = Spacing.s)
-                    .semantics {
-                        contentDescription = "$title, ${species.size}" +
-                            if (canFold) ". ${if (expanded) shown else hidden}" else ""
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-            ) {
-                Icon(Icons.Outlined.Bedtime, contentDescription = null)
-                Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                Text(
-                    species.size.toString(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (canFold) {
-                    Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null)
-                }
-            }
-            if (expanded) {
-                species.forEach { item ->
-                    BagSwipe({ onSwipeRecord(item.id) }) {
-                        SpeciesRow(item, calendar.status(item.periods, date), calendar) { onSpecies(item.id) }
-                    }
-                }
-                Text(
-                    stringResource(R.string.sorted_by_opening),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SpeciesRow(
-    item: ResolvedSpecies,
-    status: SeasonStatus,
-    calendar: SeasonCalendar,
-    onClick: () -> Unit,
-) {
-    val stacked = LocalDensity.current.fontScale >= 1.3f
-    val spoken = listOfNotNull(
-        item.name,
-        statusLabel(status, calendar),
-        calendar.spokenPeriodText(item.periods),
-        if (item.isLocal) stringResource(R.string.local_season) else null,
-        item.note?.takeIf { it.isNotBlank() },
-    ).joinToString(". ")
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.m, vertical = Spacing.xs)
-            .semantics { contentDescription = spoken },
+    GroupCard(
+        title = stringResource(R.string.not_open_here),
+        count = species.size,
+        leading = { Icon(Icons.Outlined.Bedtime, contentDescription = null, modifier = Modifier.size(28.dp)) },
+        expanded = expanded,
+        canFold = canFold,
+        foldHint = stringResource(R.string.show_closed),
+        onToggle = onToggle,
     ) {
-        if (stacked) {
-            Text(item.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            StatusText(status, calendar)
-        } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    item.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.size(Spacing.xs))
-                StatusText(status, calendar)
-            }
-        }
-        Text(
-            calendar.periodText(item.periods),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (item.isLocal) LocalBadge()
-        val note = item.note
-        if (!note.isNullOrBlank()) {
+        Column {
+            QueryRows(calendar, species, date, onSwipeRecord, onSpecies)
             Text(
-                note,
+                stringResource(R.string.sorted_by_opening),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
             )
         }
     }
 }
 
 @Composable
-private fun StatusText(status: SeasonStatus, calendar: SeasonCalendar) {
-    val season = LocalSeasonColors.current
-    val label = statusLabel(status, calendar)
-    if (status.isOpen && status.isClosingSoon) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-            Icon(Icons.Outlined.HourglassTop, contentDescription = null, tint = season.closingSoon, modifier = Modifier.size(14.dp))
-            Text(label, style = MaterialTheme.typography.bodyMedium, color = season.closingSoon, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+private fun QueryRows(
+    calendar: SeasonCalendar,
+    species: List<ResolvedSpecies>,
+    date: LocalDate,
+    onSwipeRecord: (String) -> Unit,
+    onSpecies: (String) -> Unit,
+) {
+    Column {
+        species.forEach { item ->
+            BagSwipe(item.name, { onSwipeRecord(item.id) }) {
+                SpeciesRow(item, SpeciesContext.Query(date), calendar) { onSpecies(item.id) }
+            }
         }
-    } else {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.End,
-        )
-    }
-}
-
-@Composable
-private fun statusLabel(status: SeasonStatus, calendar: SeasonCalendar): String {
-    val end = status.endDate
-    val next = status.nextOpening
-    return when {
-        status.isOpen && end != null && status.isClosingSoon && status.daysLeft == 0 -> stringResource(R.string.last_day)
-        status.isOpen && end != null && status.isClosingSoon -> stringResource(
-            R.string.last_day_date,
-            calendar.short(calendar.monthDay(end)),
-        )
-        status.isOpen && end != null -> stringResource(R.string.until_date, calendar.short(calendar.monthDay(end)))
-        next != null -> stringResource(R.string.opens_date, calendar.short(calendar.monthDay(next)))
-        else -> stringResource(R.string.no_season)
-    }
-}
-
-@Composable
-private fun LocalBadge() {
-    val color = LocalSeasonColors.current.local
-    Row(
-        Modifier
-            .padding(top = Spacing.xxs)
-            .clip(RoundedCornerShape(50))
-            .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = Spacing.xs, vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
-    ) {
-        Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
-        Text(
-            stringResource(R.string.local_season),
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.SemiBold,
-        )
     }
 }
 
@@ -819,13 +577,15 @@ private fun SunCard(
     onClick: () -> Unit,
 ) {
     val hint = stringResource(R.string.open_sun)
+    val spoken = sunSpoken(calendar, times, place, date, weather, moon)
     SectionCard {
         Row(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
                 .clickable(onClickLabel = hint, onClick = onClick)
-                .padding(Spacing.m),
+                .padding(Spacing.m)
+                .clearAndSetSemantics { contentDescription = spoken },
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
@@ -876,6 +636,55 @@ private fun SunCard(
             }
         }
     }
+}
+
+/**
+ * What TalkBack reads for the sun card, like iOS `SunRow.spoken`: sunrise and sunset by name,
+ * the weather in words, the wind and the moon phase. The visible card is only numbers and icons.
+ */
+@Composable
+private fun sunSpoken(
+    calendar: SeasonCalendar,
+    times: dk.jagtfokus.core.SunTimes,
+    place: String,
+    date: LocalDate,
+    weather: dk.jagtfokus.core.MetDay?,
+    moon: dk.jagtfokus.core.MoonPhase,
+): String {
+    val locale = calendar.locale
+    val dash = "–"
+    val parts = buildList {
+        add(
+            stringResource(
+                R.string.sun_spoken,
+                times.sunrise?.let(calendar::clockTime) ?: dash,
+                times.sunset?.let(calendar::clockTime) ?: dash,
+                basisText(place, calendar.full(calendar.monthDay(date))),
+            ),
+        )
+        if (weather != null) {
+            weatherWords(weather.symbolCode)?.let { add(stringResource(it) + ".") }
+            val max = weather.maxTemperature
+            val min = weather.minTemperature
+            if (max != null && min != null) {
+                add(stringResource(R.string.spoken_max_min, decimal(max, locale), decimal(min, locale)))
+            }
+            weather.precipitation?.let { add(stringResource(R.string.spoken_precipitation, decimal(it, locale, 0, 1))) }
+            weather.maxWindSpeed?.let { speed ->
+                val value = decimal(speed, locale)
+                val direction = weather.maxWindDirection
+                add(
+                    if (direction != null) {
+                        stringResource(R.string.spoken_wind_up_to_from, value, stringResource(windFrom(direction)))
+                    } else {
+                        stringResource(R.string.spoken_wind_up_to, value)
+                    },
+                )
+            }
+        }
+        add(stringResource(R.string.spoken_moon, stringResource(moonWords(moon.name)), percent(moon.illumination, locale)))
+    }
+    return parts.joinToString(" ")
 }
 
 /** "Maks 11,9° · Min 9,1° · 0,3 mm", or what of it MET has. */

@@ -62,6 +62,12 @@
     <string name="lit">%1$s oplyst</string>
     <string name="basis">%1$s, den %2$s</string>
     <string name="open_sun">Åbn sol og vejr for dagen</string>
+    <string name="sun_spoken">Solopgang %1$s, solnedgang %2$s. %3$s</string>
+    <string name="spoken_max_min">Maks %1$s°, min %2$s°.</string>
+    <string name="spoken_precipitation">Nedbør %1$s mm.</string>
+    <string name="spoken_wind_up_to">Vind op til %1$s m/s.</string>
+    <string name="spoken_wind_up_to_from">Vind op til %1$s m/s fra %2$s.</string>
+    <string name="spoken_moon">%1$s, %2$s oplyst.</string>
     <string name="weather">Vejret</string>
     <string name="temperature">Temperatur</string>
     <string name="precipitation">Nedbør</string>

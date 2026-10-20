@@ -142,4 +142,29 @@ class SeasonDisplayTest {
         assertEquals("16. maj – 15. jul. og 1. okt. – 31. jan.", calendar.periodText(buck))
         assertEquals("16 May – 15 Jul and 1 Oct – 31 Jan", english.periodText(buck))
     }
+
+    @Test
+    fun spokenStatusNamesTheLastDayWithFullMonth() {
+        val periods = listOf(period("10-01", "01-31"))
+        assertEquals("Jagtbar, sidste dag 31. januar", calendar.spokenStatus(calendar.status(periods, day(2026, 10, 11))))
+        assertEquals("Huntable, last day 31 January", english.spokenStatus(english.status(periods, day(2026, 10, 11))))
+    }
+
+    @Test
+    fun spokenStatusOnTheLastDayHasNoDate() {
+        val periods = listOf(period("10-01", "01-31"))
+        assertEquals("Jagtbar, sidste dag", calendar.spokenStatus(calendar.status(periods, day(2027, 1, 31))))
+    }
+
+    @Test
+    fun spokenStatusWhenShutNamesTheOpening() {
+        val periods = listOf(period("10-01", "01-31"))
+        assertEquals("Ikke jagtbar, åbner 1. oktober", calendar.spokenStatus(calendar.status(periods, day(2026, 8, 1))))
+        assertEquals("Not huntable, opens 1 October", english.spokenStatus(english.status(periods, day(2026, 8, 1))))
+    }
+
+    @Test
+    fun spokenStatusWithoutSeason() {
+        assertEquals("Ingen jagttid", calendar.spokenStatus(calendar.status(emptyList(), day(2026, 8, 1))))
+    }
 }
