@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -149,7 +150,7 @@ fun PlacePickerSheet(
     val sections = placeSections(catalog, query)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.fillMaxHeight(0.92f)) {
+        Column(Modifier.fillMaxHeight(0.92f).imePadding()) {
             Text(
                 stringResource(R.string.choose_place),
                 style = MaterialTheme.typography.titleLarge,

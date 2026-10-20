@@ -30,6 +30,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import dk.jagtfokus.app.ui.ReselectEffect
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +63,8 @@ import dk.jagtfokus.core.denmark
 import dk.jagtfokus.core.resolvedSections
 import dk.jagtfokus.core.sourceLink
 
+private val IdSetSaver = Saver<Set<String>, List<String>>(save = { it.toList() }, restore = { it.toSet() })
+
 /**
  * General times for every species. No date, no place, no status.
  * Port of AllSpeciesView.swift.
@@ -68,14 +77,25 @@ fun AllSpeciesScreen(
     photos: SpeciesPhotos?,
     bag: BagStore,
     onSwitchToJournal: () -> Unit,
+    reselect: Int = 0,
 ) {
     val context = LocalContext.current
     val locale = appLocale()
     val calendar = remember(locale) { SeasonCalendar(locale = locale) }
     val folding = remember { GroupFolding(context.applicationContext) }
-    var query by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(setOf<String>()) }
-    var speciesId by remember { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var expanded by rememberSaveable(stateSaver = IdSetSaver) { mutableStateOf(setOf<String>()) }
+    var speciesId by rememberSaveable { mutableStateOf<String?>(null) }
+    // Above the species switch, so Back from a page lands on the same scroll position.
+    val listState = rememberLazyListState()
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scope = rememberCoroutineScope()
+    ReselectEffect(reselect) {
+        val wasList = speciesId == null
+        speciesId = null
+        scroll.state.heightOffset = 0f
+        scope.launch { if (wasList) listState.animateScrollToItem(0) else listState.scrollToItem(0) }
+    }
     val searching = query.isNotBlank()
     BackHandler(speciesId != null) { speciesId = null }
 
@@ -119,11 +139,12 @@ fun AllSpeciesScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().nestedScroll(scroll.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.all_species_tab)) },
+                scrollBehavior = scroll,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -132,6 +153,7 @@ fun AllSpeciesScreen(
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(horizontal = Spacing.m, vertical = Spacing.xs),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
             modifier = Modifier.fillMaxSize().padding(padding),

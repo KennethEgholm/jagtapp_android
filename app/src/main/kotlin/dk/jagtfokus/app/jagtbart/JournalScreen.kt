@@ -37,6 +37,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.TopAppBarScrollBehavior
+import dk.jagtfokus.app.ui.ReselectEffect
+import kotlinx.coroutines.launch
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,13 +83,24 @@ fun JournalScreen(
     vm: JagtbartViewModel,
     bag: BagStore,
     calendar: SeasonCalendar,
+    reselect: Int = 0,
 ) {
     val context = LocalContext.current
     val locale = appLocale()
-    var route by remember { mutableStateOf<JournalRoute>(JournalRoute.Root) }
+    var route by rememberSaveable(stateSaver = JournalRouteSaver) { mutableStateOf<JournalRoute>(JournalRoute.Root) }
     var showDate by remember { mutableStateOf(false) }
     var showPlace by remember { mutableStateOf(false) }
     BackHandler(route != JournalRoute.Root) { route = JournalRoute.Root }
+    // Above the route switch, so Back from a page lands on the same scroll position.
+    val listState = rememberLazyListState()
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scope = rememberCoroutineScope()
+    ReselectEffect(reselect) {
+        val wasRoot = route == JournalRoute.Root
+        route = JournalRoute.Root
+        scroll.state.heightOffset = 0f
+        scope.launch { if (wasRoot) listState.animateScrollToItem(0) else listState.scrollToItem(0) }
+    }
 
     // The draft follows "here" until the hunter picks. Locate quietly when shown,
     // as iOS does, but without a permission dialog from this tab.
@@ -115,6 +135,8 @@ fun JournalScreen(
             vm = vm,
             bag = bag,
             calendar = calendar,
+            listState = listState,
+            scroll = scroll,
             year = year,
             openHere = openHere,
             recent = recent,
@@ -136,6 +158,27 @@ fun JournalScreen(
     }
 }
 
+private val JournalRouteSaver = Saver<JournalRoute, String>(
+    save = { route ->
+        when (route) {
+            JournalRoute.Root -> "root"
+            JournalRoute.Year -> "year"
+            JournalRoute.SpeciesList -> "species"
+            JournalRoute.Search -> "search"
+            is JournalRoute.Edit -> "edit:${route.id}"
+        }
+    },
+    restore = { saved ->
+        when {
+            saved == "year" -> JournalRoute.Year
+            saved == "species" -> JournalRoute.SpeciesList
+            saved == "search" -> JournalRoute.Search
+            saved.startsWith("edit:") -> JournalRoute.Edit(saved.removePrefix("edit:"))
+            else -> JournalRoute.Root
+        }
+    },
+)
+
 private sealed interface JournalRoute {
     data object Root : JournalRoute
     data object Year : JournalRoute
@@ -150,6 +193,8 @@ private fun JournalTab(
     vm: JagtbartViewModel,
     bag: BagStore,
     calendar: SeasonCalendar,
+    listState: LazyListState,
+    scroll: TopAppBarScrollBehavior,
     year: Int,
     openHere: List<ResolvedSpecies>,
     recent: List<ResolvedSpecies>,
@@ -181,10 +226,12 @@ private fun JournalTab(
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.journal_heading)) },
+                scrollBehavior = scroll,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
@@ -205,6 +252,7 @@ private fun JournalTab(
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             contentPadding = PaddingValues(horizontal = Spacing.m, vertical = Spacing.xs),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
             modifier = Modifier.fillMaxSize().padding(padding),

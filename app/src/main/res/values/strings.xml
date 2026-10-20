@@ -14,6 +14,7 @@
     <string name="choose">Vælg</string>
     <string name="cancel">Annuller</string>
     <string name="close">Luk</string>
+    <string name="back">Tilbage</string>
     <string name="choose_place">Vælg sted</string>
     <string name="search_place">Søg ø, område eller region</string>
     <string name="my_position">Min position</string>
