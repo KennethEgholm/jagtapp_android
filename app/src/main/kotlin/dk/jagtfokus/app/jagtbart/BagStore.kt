@@ -3,17 +3,20 @@ package dk.jagtfokus.app.jagtbart
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import dk.jagtfokus.app.data.BagFileStore
-import dk.jagtfokus.app.data.SpeciesChecklistFileStore
 import dk.jagtfokus.core.BagEntry
+import dk.jagtfokus.core.BagFileStore
 import dk.jagtfokus.core.BagJournal
 import dk.jagtfokus.core.Place
+import dk.jagtfokus.core.SeasonCalendar
 import dk.jagtfokus.core.SpeciesChecklist
+import dk.jagtfokus.core.SpeciesChecklistFileStore
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 /**
@@ -23,7 +26,7 @@ import kotlinx.coroutines.launch
 class BagDraft {
     var followToday by mutableStateOf(true)
         private set
-    var pickedDate by mutableStateOf(LocalDate.now())
+    var pickedDate by mutableStateOf(LocalDate.now(SeasonCalendar.ZONE))
         private set
     var followHere by mutableStateOf(true)
         private set
@@ -63,9 +66,11 @@ class BagDraft {
  * the phone. Port of BagStore.swift, without the iCloud key-value layer.
  */
 class BagStore(filesDir: File) {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val writer: CoroutineDispatcher = Dispatchers.IO.limitedParallelism(1)
     private val fileStore = BagFileStore(File(filesDir, "vildtudbytte.json"))
     private val checklistStore = SpeciesChecklistFileStore(File(filesDir, "artsliste.json"))
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(writer)
 
     var journal by mutableStateOf(BagJournal())
         private set
@@ -82,12 +87,13 @@ class BagStore(filesDir: File) {
     val draft = BagDraft()
 
     init {
-        val loaded = fileStore.load()
+        // Two small files. Failures fall back to an empty bag rather than crash the start.
+        val loaded = runCatching { fileStore.load() }.getOrDefault(BagJournal())
         journal = loaded
         speciesList = if (checklistStore.fileExists) {
-            checklistStore.load() ?: SpeciesChecklist()
+            runCatching { checklistStore.load() }.getOrNull() ?: SpeciesChecklist()
         } else {
-            SpeciesChecklist().seededFrom(loaded).also { checklistStore.save(it) }
+            SpeciesChecklist().seededFrom(loaded).also { persistChecklist(it) }
         }
     }
 
@@ -151,12 +157,13 @@ class BagStore(filesDir: File) {
         persist(saved)
     }
 
+    // One writer thread runs the jobs in the order they were queued, so the
+    // last write is always the latest state.
     private fun persist(saved: BagJournal) {
-        scope.launch { fileStore.save(saved) }
+        scope.launch { runCatching { fileStore.save(saved) } }
     }
 
-    private fun persistChecklist() {
-        val current = speciesList
-        scope.launch { checklistStore.save(current) }
+    private fun persistChecklist(list: SpeciesChecklist = speciesList) {
+        scope.launch { runCatching { checklistStore.save(list) } }
     }
 }
