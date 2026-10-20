@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">JagtFokus</string>
+    <string name="locale_tag" translatable="false">en</string>
     <string name="tab_jagtbart">Huntable</string>
     <string name="headline">Huntable game by date and place</string>
     <string name="date">Date</string>

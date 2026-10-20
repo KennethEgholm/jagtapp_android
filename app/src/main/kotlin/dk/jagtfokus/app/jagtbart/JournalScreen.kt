@@ -40,7 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import dk.jagtfokus.app.ui.appLocale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -76,7 +76,7 @@ fun JournalScreen(
     calendar: SeasonCalendar,
 ) {
     val context = LocalContext.current
-    val locale = LocalConfiguration.current.locales[0]
+    val locale = appLocale()
     var route by remember { mutableStateOf<JournalRoute>(JournalRoute.Root) }
     var showDate by remember { mutableStateOf(false) }
     var showPlace by remember { mutableStateOf(false) }
