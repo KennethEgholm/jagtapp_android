@@ -282,8 +282,10 @@
     <string name="about_privacy">Privacy</string>
     <string name="no_account">No account</string>
     <string name="no_tracking">No tracking</string>
-    <string name="location_stays">Your location stays on your phone</string>
-    <string name="works_offline">Works offline</string>
+    <string name="location_use">Location used only for place, sun and weather</string>
+    <string name="works_offline">Seasons work offline</string>
+    <string name="open_privacy_policy">Open the privacy policy (in Danish)</string>
+    <string name="privacy_footer">The weather comes from MET Norway with your location rounded to about 1 km. The phone\'s built-in geocoder looks up the place name, Google on most phones. We never receive your location. The journal stays on your phone and can be part of your own Android backup.</string>
     <string name="about_this_app">This app</string>
     <string name="app_tagline">Seasons by date and place</string>
     <string name="app_version">Version</string>
@@ -298,7 +300,7 @@
     <string name="welcome_feature_local_title">Local seasons</string>
     <string name="welcome_feature_local">Islands and areas with their own seasons beat the general ones.</string>
     <string name="welcome_feature_privacy_title">Private and offline</string>
-    <string name="welcome_feature_privacy">No account. No tracking. Your location stays on your phone.</string>
+    <string name="welcome_feature_privacy">No account. No tracking. Your location is used only for place, sun and weather.</string>
     <string name="welcome_important">Important</string>
     <string name="welcome_accept">Understood</string>
     <string name="welcome_after">JagtFokus then asks for your location.</string>

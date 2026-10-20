@@ -69,6 +69,7 @@ app/src/main/kotlin/dk/jagtfokus/app/
 app/src/main/res/values/           # Danish source strings
 app/src/main/res/values-en/        # English
 app/src/main/res/xml/              # backup_rules, data_extraction_rules, locales_config
+docs/privatliv.html                # Android privacy policy (Danish). GitHub Pages from /docs
 ```
 
 ## Screens
@@ -78,7 +79,7 @@ Built:
 1. **Jagtbart** — heading “Jagtbart vildt efter tid og sted”. Date and place, then the sun card, then the answer card, then open groups, then “Ikke jagtbar her”. Default: today + here. Pull to refresh updates location and, when newer, the catalog.
 2. **Sol og vejr** — pushed from the sun card. Display only. MET Norway. Sun and moon are calculated on the phone. The sun card on Jagtbart shows sunrise, sunset, sky and moon.
 3. **Artsdetalje** — pushed from Jagtbart, so it shows status. Photo, biology and a **Tilføj til journal** row like iOS.
-4. **Indstillinger** — fourth tab. Udseende (System/Lys/Mørk, no Material You), then the Om sections in the same list: Data, Ansvar, Schweiss-registret (pushed, same content as the sheet), Fotos, Privatliv, Denne app with Version and Dataversion. "Sammenfold grupper" lives here now (was a sheet until this tab existed).
+4. **Indstillinger** — fourth tab. Udseende (System/Lys/Mørk, no Material You), then the Om sections in the same list: Data, Ansvar, Schweiss-registret (pushed, same content as the sheet), Fotos, Privatliv (with a link to the Android privacy policy, `docs/privatliv.html`), Denne app with Version and Dataversion. "Sammenfold grupper" lives here now (was a sheet until this tab existed).
 5. **Schweiss-registret** — a sheet from the **Anskudt** button in the top bar; pushed from Indstillinger's Om section. No handler phone list, no Anskudt button on rows.
 6. **Journal** — the second tab, so the bottom bar exists now. Its own date and place draft. Year rows, species list, search and edit, like iOS v1. Swipe left on a species row in Jagtbart records it and switches tabs; the row snaps back. Species detail has **Tilføj til journal**. Local file only, no cloud.
 7. **Alle arter** — third tab. General seasons for every species, grouped cards that start collapsed (Sammenfold grupper applies; search unfolds groups with hits). No date, no place, no open/closed. Rows have the same bag swipe as Jagtbart. Detail page shows the general context: no status, thin SeasonBar without marker, species note.
@@ -119,7 +120,8 @@ Bottom bar: Jagtbart, Journal, Alle arter, Indstillinger.
 - Back on any tab other than Jagtbart goes to Jagtbart; a screen's own `BackHandler` wins. Reselecting the open tab pops to its root and scrolls to top: the shell bumps a counter and screens call `ReselectEffect`.
 - One `BagStore` lives on `JagtFokusApp`. Bag writes go through a single-threaded writer.
 - Debug extras (`date`, `place`, `sheet`) are honoured only when the app is debuggable. Release builds ignore them.
-- Auto Backup is on, with explicit rules in `res/xml/backup_rules.xml` and `data_extraction_rules.xml`: the journal files and preferences are included; the catalog cache and `*.corrupt.json` are not. A restored phone keeps the journal and the `velkomst` flag.
+- Auto Backup is on, with explicit rules in `res/xml/backup_rules.xml` and `data_extraction_rules.xml`: the journal files and preferences are included; the catalog cache and `*.corrupt.json` are not. A restored phone keeps the journal and the `velkomst` flag. The privacy footer and `docs/privatliv.html` say so; change both if the rules change.
+- The privacy policy for Android is `docs/privatliv.html`, not the iOS page: Android looks up place names with the system geocoder (Google on most phones) and has Auto Backup. Keep it true when location, weather, network or stored data change. Weather sends the location rounded to two decimals (`MetForecast.rounded`).
 - Release builds use R8 (minify and resource shrink). `app/proguard-rules.pro` keeps the `dk.jagtfokus.core` serializers. Check a release build on a device after touching serialization.
 - Lint must stay at 0 errors. `OldTargetApi` may stay.
 

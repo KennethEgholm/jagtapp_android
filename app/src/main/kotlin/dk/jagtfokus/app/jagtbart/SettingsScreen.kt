@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import dk.jagtfokus.app.data.RemoteOutcome
 import dk.jagtfokus.app.ui.BrandMark
+import dk.jagtfokus.app.ui.LinkRow
 import dk.jagtfokus.app.ui.cardListItemColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -274,9 +275,11 @@ fun SettingsScreen(
                 SectionCard {
                     LabelRow(Icons.Outlined.PersonOff, stringResource(R.string.no_account))
                     LabelRow(Icons.Outlined.PanTool, stringResource(R.string.no_tracking))
-                    LabelRow(Icons.Outlined.LocationOn, stringResource(R.string.location_stays))
+                    LabelRow(Icons.Outlined.LocationOn, stringResource(R.string.location_use))
                     LabelRow(Icons.Outlined.WifiOff, stringResource(R.string.works_offline))
+                    LinkRow(stringResource(R.string.open_privacy_policy), PRIVACY_POLICY_URL, colors = cardListItemColors())
                 }
+                SectionFooter(stringResource(R.string.privacy_footer))
             }
             item { SectionHeader(stringResource(R.string.about_this_app)) }
             item {
@@ -342,6 +345,9 @@ private fun LabelRow(icon: ImageVector, text: String) {
         colors = cardListItemColors(),
     )
 }
+
+/** The Android privacy policy, on this repo's GitHub Pages. Danish only. */
+private const val PRIVACY_POLICY_URL = "https://kennethegholm.github.io/jagtapp_android/privatliv.html"
 
 /** "2026-10-11" → "11. oktober 2026", or the raw text when it does not parse. */
 @Composable

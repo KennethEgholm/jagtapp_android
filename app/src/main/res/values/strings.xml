@@ -282,8 +282,10 @@
     <string name="about_privacy">Privatliv</string>
     <string name="no_account">Ingen konto</string>
     <string name="no_tracking">Ingen tracking</string>
-    <string name="location_stays">Din position bliver på telefonen</string>
-    <string name="works_offline">Virker offline</string>
+    <string name="location_use">Positionen bruges kun til sted, sol og vejr</string>
+    <string name="works_offline">Jagttiderne virker offline</string>
+    <string name="open_privacy_policy">Åbn privatlivspolitikken</string>
+    <string name="privacy_footer">Vejret hentes fra MET i Norge med din position afrundet til omkring en kilometer. Stednavnet slår telefonens indbyggede geokoder op, på de fleste telefoner Google. Vi får aldrig din position. Journalen bliver på telefonen og kan komme med i din egen Android-backup.</string>
     <string name="about_this_app">Denne app</string>
     <string name="app_tagline">Jagttider efter dato og sted</string>
     <string name="app_version">Version</string>
@@ -298,7 +300,7 @@
     <string name="welcome_feature_local_title">Lokale jagttider</string>
     <string name="welcome_feature_local">Øer og områder med egne tider slår de generelle.</string>
     <string name="welcome_feature_privacy_title">Privat og offline</string>
-    <string name="welcome_feature_privacy">Ingen konto. Ingen tracking. Din position bliver på telefonen.</string>
+    <string name="welcome_feature_privacy">Ingen konto. Ingen tracking. Din position bruges kun til sted, sol og vejr.</string>
     <string name="welcome_important">Vigtigt</string>
     <string name="welcome_accept">Forstået</string>
     <string name="welcome_after">Derefter spørger JagtFokus om din position.</string>

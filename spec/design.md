@@ -49,6 +49,8 @@ Tredje fane. Generelle jagttider for alle arter, grupperet i kort der starter sa
 
 Fjerde fane (tandhjul). Øverst **Udseende** som en `SingleChoiceSegmentedButtonRow` (System/Lys/Mørk med ikoner) — valget ligger i "udseende"-præferencen og styrer `JagtFokusTheme`, så hele appen skifter med det samme. Så **Lister** med "Sammenfold grupper". Derefter Om-sektionerne i samme liste, som iOS: Data (kilde, opdateret, bekendtgørelsen), Ansvar, Schweiss-registret (skubbet ind som skærm, ikke ark), Fotos, Privatliv og Denne app med Version (fra PackageManager) og Dataversion (fra kataloget).
 
+Privatliv følger iOS-rettelsen fra 2026-10-20: “Positionen bruges kun til sted, sol og vejr”, “Jagttiderne virker offline” (vejret kræver net) og **Åbn privatlivspolitikken**. Velkomst siger “Ingen konto. Ingen tracking. Din position bruges kun til sted, sol og vejr.” Footeren afviger fra iOS, fordi Android gør to ting anderledes: stednavnet slår telefonens indbyggede geokoder op (på de fleste telefoner Google, ikke Apple), og journalen kan komme med i brugerens egen Android-backup. Linket peger på Android-repoets egen side, `docs/privatliv.html` på GitHub Pages (`kennethegholm.github.io/jagtapp_android/privatliv.html`), ikke iOS-siden, der nævner Apple og iCloud. Siden findes kun på dansk, og det siger den engelske linktekst.
+
 ## Velkomst
 
 Første start. Mørkegrøn brandverden (`BrandDeep` med glow fra øverst højre), mærket, tre punkter i guld (dato og sted, lokale jagttider, privat og offline), fraskrivelsen i en boks med guldkant og knappen **Forstået** i guld. Den forklarer positionsbrugen, før systemets dialog kommer. Gemt i "velkomst"-præferencen; slettes data, kommer den igen.

@@ -5,6 +5,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,13 +19,19 @@ import androidx.compose.ui.semantics.Role
  * browser must not crash the app, the tap just does nothing.
  */
 @Composable
-fun LinkRow(text: String, url: String, modifier: Modifier = Modifier) {
+fun LinkRow(
+    text: String,
+    url: String,
+    modifier: Modifier = Modifier,
+    colors: ListItemColors = ListItemDefaults.colors(),
+) {
     val uriHandler = LocalUriHandler.current
     ListItem(
         headlineContent = { Text(text, color = MaterialTheme.colorScheme.primary) },
         leadingContent = {
             Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         },
+        colors = colors,
         modifier = modifier.clickable(role = Role.Button) { runCatching { uriHandler.openUri(url) } },
     )
 }
