@@ -59,6 +59,10 @@ data class BagJournal(
 
     fun remove(id: String): BagJournal = copy(entries = entries.filterNot { it.id == id })
 
+    /** Puts a deleted entry back, as it was. An entry already present is left alone. */
+    fun restore(entry: BagEntry): BagJournal =
+        if (entries.any { it.id == entry.id }) this else copy(entries = entries + entry)
+
     fun update(id: String, date: String, count: Int, placeId: String?, now: Instant): BagJournal = copy(
         entries = entries.map { entry ->
             if (entry.id == id) {

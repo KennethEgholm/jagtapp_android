@@ -35,13 +35,13 @@ class BagDraft {
 
     fun date(now: LocalDate): LocalDate = if (followToday) now else pickedDate
 
-    /** Nil while following here and GPS has not landed. A picked place is stored. */
-    fun placeId(gpsPlace: Place?): String? =
-        if (followHere) gpsPlace?.id else pickedPlace?.id
+    /** Nil while following here and the position is not found. A picked place is stored. */
+    fun placeId(gpsPlace: Place?, state: LocationState): String? =
+        if (followHere) gpsPlace?.takeIf { state == LocationState.Found }?.id else pickedPlace?.id
 
-    fun place(now: LocalDate, gpsPlace: Place?, denmark: Place): Place =
+    fun place(gpsPlace: Place?, state: LocationState, denmark: Place): Place =
         when {
-            followHere && gpsPlace != null -> gpsPlace
+            followHere && gpsPlace != null && state == LocationState.Found -> gpsPlace
             followHere -> denmark
             else -> pickedPlace ?: denmark
         }
@@ -83,6 +83,9 @@ class BagStore(filesDir: File) {
     /** Bumped when a swipe action or species page records from another tab. */
     var tabRequests by mutableStateOf(0)
         private set
+    /** Bumped on every note and +1, so the screen can give haptic feedback. */
+    var saves by mutableStateOf(0)
+        private set
 
     val draft = BagDraft()
 
@@ -105,6 +108,7 @@ class BagStore(filesDir: File) {
         journal = saved
         speciesList = speciesList.add(speciesId)
         pendingId = saved.entries.lastOrNull()?.id
+        saves += 1
         persist(saved)
         persistChecklist()
     }
@@ -118,6 +122,7 @@ class BagStore(filesDir: File) {
         val id = pendingId ?: return
         val saved = journal.increment(id, Instant.now())
         journal = saved
+        saves += 1
         persist(saved)
     }
 
@@ -154,6 +159,13 @@ class BagStore(filesDir: File) {
         val saved = journal.remove(id)
         journal = saved
         if (pendingId == id) pendingId = null
+        persist(saved)
+    }
+
+    /** Puts a deleted entry back, for Fortryd. */
+    fun restore(entry: BagEntry) {
+        val saved = journal.restore(entry)
+        journal = saved
         persist(saved)
     }
 

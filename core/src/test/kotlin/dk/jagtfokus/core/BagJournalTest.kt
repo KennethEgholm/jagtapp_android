@@ -58,6 +58,17 @@ class BagJournalTest {
     }
 
     @Test
+    fun restorePutsADeletedEntryBackOnce() {
+        val kept = entry("a", "2026-10-01")
+        val gone = entry("b", "2026-10-02", count = 3)
+        val after = journal(kept, gone).remove("b")
+        val restored = after.restore(gone)
+        assertEquals(gone, restored.entry("b"))
+        assertEquals(2, restored.entries.size)
+        assertEquals(restored, restored.restore(gone))
+    }
+
+    @Test
     fun updateChangesFieldsAndKeepsCountAtLeastOne() {
         var bag = BagJournal().record("raev", day(2026, 10, 19), null, now)
         val id = bag.entries[0].id

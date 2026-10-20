@@ -107,7 +107,7 @@ fun AllSpeciesScreen(
     }
 
     val recordSwipe: (String) -> Unit = { id ->
-        bag.recordAndSwitchTab(id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace))
+        bag.recordAndSwitchTab(id, bag.draft.date(vm.now), bag.draft.placeId(vm.gpsPlace, vm.locationState))
         onSwitchToJournal()
     }
 
